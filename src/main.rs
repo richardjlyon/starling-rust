@@ -24,24 +24,21 @@ async fn main() {
         .header(ACCEPT, "application/json")
         .send()
         .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
+        .expect("Failed to get url");
+    
+    match response.status() {
+        reqwest::StatusCode::OK => (),
+        reqwest::StatusCode::FORBIDDEN => {
+            println!("Authorisation failed");
+            println!("Exiting");
+            std::process::exit(0);
+        }
+        _ => {
+            panic!("Something unexpected happened");
+        }
+    }
 
-    // match response.status() {
-    //     reqwest::StatusCode::OK => {
-    //         println!("Success. {:?}");
-    //     },
-    //     reqwest::StatusCode::UNAUTHORIZED => {
-    //         println!("Need an auth code");
-    //     }
-    //     _ => {
-    //         panic!("Something unexpected happened");
-    //     }
-    // }
-
-    println!("{:?}", response)
+    // println!("{:?}", response)
 
     // let account_v2 = AccountV2{
     //     description:String::from("test")
