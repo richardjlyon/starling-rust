@@ -2,8 +2,9 @@
 pub enum AppError {
     ConfigLoad,
     Authorisation,
-    Other,
+    NotFound,
     NetworkError,
+    ParseError,
     ReadError,
+    Other,
 }
-
