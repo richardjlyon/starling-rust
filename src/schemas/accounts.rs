@@ -23,3 +23,18 @@ pub struct Account {
     pub created_at: String,
     pub account_type: AccountType,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SignedCurrencyAndAmount {
+    pub currency: String,
+    pub minor_units: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Balance {
+    cleared_balance: SignedCurrencyAndAmount,
+    effective_balance: SignedCurrencyAndAmount,
+    pending_transactions: SignedCurrencyAndAmount,
+}

@@ -6,12 +6,14 @@ use error::AppError;
 use reqwest::header;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::StatusCode;
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 
-use crate::schemas::accounts::{Account, AccountResponse};
+use crate::schemas::accounts::{Account, AccountResponse, Balance};
 
 const APIBASE: &str = "https://api.starlingbank.com/api/v2";
 
+// A Starling API client
 pub struct Client {
     client: reqwest::Client,
 }
@@ -43,13 +45,20 @@ impl Client {
 
     // /accounts
     pub async fn accounts(&self) -> Vec<Account> {
-        let json_text = self.get("accounts").await.expect("Failed to get accounts");
-        let data: AccountResponse = serde_json::from_str(&json_text).unwrap();
+        let data: AccountResponse = self.get("accounts").await.expect("Failed to get accounts");
         data.accounts
     }
 
-    // get json text for endpoint url
-    async fn get(&self, url: &str) -> Result<String, AppError> {
+    // /accounts/account_uid/balancd
+    pub async fn balance(&self, account_uid: &str) -> Balance {
+        let url = format!("accounts/{}/balance", account_uid);
+        let data: Balance = self.get(&url).await.expect("Failed to get balance");
+
+        data
+    }
+
+    // get deserialised JSON for endpoint url
+    async fn get<T: DeserializeOwned>(&self, url: &str) -> Result<T, AppError> {
         let url = format!("{}/{}", APIBASE, url);
 
         // Result<a, b> + fn b -> c = Result<a, c>
@@ -62,8 +71,15 @@ impl Client {
             .await
             .map_err(|_| AppError::NetworkError)?;
 
-        match response.status() {
-            StatusCode::OK => response.text().await.map_err(|_| AppError::ReadError),
+        // status only borrows the request
+        let status = response.status();
+
+        // response.text
+        let text = response.text().await.map_err(|_| AppError::ReadError)?;
+        let data = serde_json::from_str(&text).unwrap(); // todo(richlyon): handle this error
+
+        match status {
+            StatusCode::OK => Ok(data),
             StatusCode::FORBIDDEN => Err(AppError::Authorisation),
             _ => Err(AppError::Other),
         }
