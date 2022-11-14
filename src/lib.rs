@@ -1,12 +1,13 @@
+mod error;
+pub mod schemas;
+
+use config::Config;
 use error::AppError;
 use reqwest::header;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use reqwest::{self, Request};
+use std::collections::HashMap;
 
-mod error;
-pub mod schemas;
 use crate::schemas::accounts::{Account, AccountResponse};
-use anyhow::Context;
 
 const APIBASE: &str = "https://api.starlingbank.com/api/v2";
 
@@ -15,10 +16,12 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(auth_key: &str) -> Self {
+    // make an authenticated client for account_name
+    pub fn new(account_name: &str) -> Self {
+        let auth_key = get_key(account_name);
         let auth_string = format!("Bearer {}", auth_key);
-
         let mut headers = header::HeaderMap::new();
+
         headers.insert(
             AUTHORIZATION,
             header::HeaderValue::from_str(&auth_string).unwrap(),
@@ -37,26 +40,17 @@ impl Client {
         Self { client: client }
     }
 
-    // get accounts
+    // /accounts
     pub async fn accounts(&self) -> Vec<Account> {
-        let url = format!("{}/accounts", APIBASE);
-        let response = self.get("accounts").await.expect("Failed to get accounts");
-
-        // grab the text
-        // THIS IS A DICTIONARY, key is 'accounts'
-        let json_text = response
-            .text()
-            .await
-            .expect("Failed to get text from response");
-
+        let json_text = self.get("accounts").await.expect("Failed to get accounts");
         let data: AccountResponse = serde_json::from_str(&json_text).unwrap();
-
         data.accounts
     }
 
-    // get a url
-    async fn get(&self, url: &str) -> Result<reqwest::Response, AppError> {
+    // get json text for endpoint url
+    async fn get(&self, url: &str) -> Result<String, AppError> {
         let url = format!("{}/{}", APIBASE, url);
+
         let response = self
             .client
             .get(url)
@@ -65,9 +59,30 @@ impl Client {
             .expect("Failed to get url");
 
         match response.status() {
-            reqwest::StatusCode::OK => Ok(response),
+            reqwest::StatusCode::OK => Ok(response
+                .text()
+                .await
+                .expect("Failed to get text from response")),
             reqwest::StatusCode::FORBIDDEN => Err(AppError::Authorisation),
             _ => Err(AppError::Other),
+        }
+    }
+}
+
+// get the api key for the specified account name
+fn get_key(account_name: &str) -> String {
+    let config = Config::builder()
+        .add_source(config::File::with_name("keys"))
+        .build()
+        .unwrap();
+
+    let mut keys = config.try_deserialize::<HashMap<String, String>>().unwrap();
+
+    match keys.remove(account_name) {
+        Some(key) => key,
+        None => {
+            println!("No API key found for account'{}'", account_name);
+            std::process::exit(0);
         }
     }
 }
