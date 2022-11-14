@@ -5,6 +5,7 @@ use config::Config;
 use error::AppError;
 use reqwest::header;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::StatusCode;
 use std::collections::HashMap;
 
 use crate::schemas::accounts::{Account, AccountResponse};
@@ -51,19 +52,19 @@ impl Client {
     async fn get(&self, url: &str) -> Result<String, AppError> {
         let url = format!("{}/{}", APIBASE, url);
 
+        // Result<a, b> + fn b -> c = Result<a, c>
+        // by default, the question mark will _also_ attempt to convert whatever
+        // error type into the error type in question
         let response = self
             .client
             .get(url)
             .send()
             .await
-            .expect("Failed to get url");
+            .map_err(|_| AppError::NetworkError)?;
 
         match response.status() {
-            reqwest::StatusCode::OK => Ok(response
-                .text()
-                .await
-                .expect("Failed to get text from response")),
-            reqwest::StatusCode::FORBIDDEN => Err(AppError::Authorisation),
+            StatusCode::OK => response.text().await.map_err(|_| AppError::ReadError),
+            StatusCode::FORBIDDEN => Err(AppError::Authorisation),
             _ => Err(AppError::Other),
         }
     }
