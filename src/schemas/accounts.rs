@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
 pub enum AccountType {
     PRIMARY,
     ADDITONAL,
@@ -5,6 +8,7 @@ pub enum AccountType {
     FIXED_TERM_DEPOSIT
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
     pub description: String,
     pub accounts: Vec<AccountV2>,
@@ -15,7 +19,7 @@ pub struct Account {
     pub name: String
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AccountV2 {
     pub description: String,
 }

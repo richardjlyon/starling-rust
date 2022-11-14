@@ -969,6 +969,8 @@ dependencies = [
  "config",
  "futures",
  "reqwest",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
