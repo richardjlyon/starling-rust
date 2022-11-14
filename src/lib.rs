@@ -1,7 +1,14 @@
-const APIBASE: &str = "https://api.starlingbank.com/api/v2";
-use reqwest;
+use error::AppError;
 use reqwest::header;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::{self, Request};
+
+mod error;
+pub mod schemas;
+use crate::schemas::accounts::{Account, AccountResponse};
+use anyhow::Context;
+
+const APIBASE: &str = "https://api.starlingbank.com/api/v2";
 
 pub struct Client {
     client: reqwest::Client,
@@ -9,10 +16,12 @@ pub struct Client {
 
 impl Client {
     pub fn new(auth_key: &str) -> Self {
+        let auth_string = format!("Bearer {}", auth_key);
+
         let mut headers = header::HeaderMap::new();
         headers.insert(
             AUTHORIZATION,
-            header::HeaderValue::from_str(auth_key).unwrap(),
+            header::HeaderValue::from_str(&auth_string).unwrap(),
         );
         headers.insert(
             CONTENT_TYPE,
@@ -28,25 +37,38 @@ impl Client {
         Self { client: client }
     }
 
-    // return accounts
-    pub async fn accounts(&self) {
+    // get accounts
+    pub async fn accounts(&self) -> Vec<Account> {
         let url = format!("{}/accounts", APIBASE);
-        let response = self.get("accounts").await;
+        let response = self.get("accounts").await.expect("Failed to get accounts");
 
-        println!("{:?}", response);
+        // grab the text
+        // THIS IS A DICTIONARY, key is 'accounts'
+        let json_text = response
+            .text()
+            .await
+            .expect("Failed to get text from response");
+
+        let data: AccountResponse = serde_json::from_str(&json_text).unwrap();
+
+        data.accounts
     }
 
     // get a url
-    async fn get(&self, url: &str) -> &reqwest::Response {
+    async fn get(&self, url: &str) -> Result<reqwest::Response, AppError> {
         let url = format!("{}/{}", APIBASE, url);
-        let response = &self
+        let response = self
             .client
             .get(url)
             .send()
             .await
             .expect("Failed to get url");
 
-        response.clone()
+        match response.status() {
+            reqwest::StatusCode::OK => Ok(response),
+            reqwest::StatusCode::FORBIDDEN => Err(AppError::Authorisation),
+            _ => Err(AppError::Other),
+        }
     }
 }
 

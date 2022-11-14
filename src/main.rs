@@ -1,4 +1,4 @@
-use crate::schemas::accounts::AccountV2;
+// use crate::schemas::accounts::AccountV2;
 
 pub mod schemas;
 // use serde::Deserialize;
@@ -11,26 +11,9 @@ async fn main() {
     let personal_auth_token = get_key("personal");
     let client = starling::Client::new(&personal_auth_token);
 
-    client.accounts().await;
+    let accounts = client.accounts().await;
 
-    // match response.status() {
-    //     reqwest::StatusCode::OK => (),
-    //     reqwest::StatusCode::FORBIDDEN => {
-    //         println!("Authorisation failed");
-    //         println!("Exiting");
-    //         std::process::exit(0);
-    //     }
-    //     _ => {
-    //         panic!("Something unexpected happened");
-    //     }
-    // }
-
-    // println!("{:?}", response)
-
-    // let account_v2 = AccountV2{
-    //     description:String::from("test")
-    // };
-    // println!("I have account {:?}", account_v2);
+    println!("Account 1: {:#?}", accounts[0]);
 }
 
 // get the api key for the specified account name
