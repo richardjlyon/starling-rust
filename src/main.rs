@@ -21,8 +21,11 @@ async fn main() {
         let transactions = client
             .transactions(&account.account_uid, now - chrono::Duration::days(7), now)
             .await;
-
-        tracing::info!("Transactions: {:#?}", transactions);
+            
+            // tracing::info!("Transactions: {:#?}", transactions);
+        for transaction in transactions {
+            println!("{}", transaction);
+        }
     }
 
     tracing::info!("{:?}", now);

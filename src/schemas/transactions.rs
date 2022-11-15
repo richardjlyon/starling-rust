@@ -181,6 +181,22 @@ pub struct Transaction {
     round_up: Option<RoundUp>,
 }
 
+impl Display for Transaction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let status = match self.status {
+            Status::SETTLED => "*",
+            _ => "!",
+        };
+
+        write!(
+            f,
+            "{date} {status} ",
+            date = self.settlement_time,
+            status = status
+        )
+    }
+}
+
 // alias (multiple)
 // DESER = {key: ()} -> {alias: ()}
 // SER   = {alias: ()} -> {alias: ()}
