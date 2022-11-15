@@ -1,12 +1,14 @@
 mod error;
 pub mod schemas;
 
+use anyhow::Context;
 use config::Config;
 use error::AppError;
 use reqwest::header;
 use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::StatusCode;
 use serde::de::DeserializeOwned;
+
 use std::collections::HashMap;
 
 use crate::schemas::accounts::{Account, AccountId, AccountResponse, Balance};
@@ -15,6 +17,7 @@ use crate::schemas::transactions::{Transaction, TransactionResponse};
 const APIBASE: &str = "https://api.starlingbank.com/api/v2";
 
 // A Starling API client
+
 pub struct Client {
     client: reqwest::Client,
 }
@@ -67,7 +70,7 @@ impl Client {
         account_uid: &AccountId,
         start_date: chrono::DateTime<chrono::Utc>,
         end_date: chrono::DateTime<chrono::Utc>,
-    ) -> Vec<Transaction> {
+    ) -> Result<Vec<Transaction>, AppError> {
         #[derive(serde::Serialize)]
         struct Params {
             #[serde(rename = "minTransactionTimestamp")]
@@ -78,20 +81,15 @@ impl Client {
 
         let url = format!("feed/account/{}/settled-transactions-between", account_uid);
 
-        let data: TransactionResponse = self
-            .get(
-                &url,
-                &Params {
-                    min_transaction_timestamp: start_date,
-                    max_transaction_timestamp: end_date,
-                },
-            )
-            .await
-            .expect("Failed to get transactions");
-
-        tracing::info!("Data: {:#?}", data);
-
-        data.feed_items
+        self.get(
+            &url,
+            &Params {
+                min_transaction_timestamp: start_date,
+                max_transaction_timestamp: end_date,
+            },
+        )
+        .await
+        .map(|d: TransactionResponse| d.feed_items)
     }
 
     // get deserialised JSON for endpoint url
@@ -116,14 +114,19 @@ impl Client {
         // status only borrows the request
         let status = response.status();
 
-        let text = match status {
+        let json_text = match status {
             StatusCode::OK => response.text().await.map_err(|_| AppError::ReadError),
             StatusCode::FORBIDDEN => Err(AppError::Authorisation),
             StatusCode::NOT_FOUND => Err(AppError::NotFound),
             _ => Err(AppError::Other),
         }?;
 
-        serde_json::from_str(&text).map_err(|_| AppError::ParseError)
+        // deserialise with path to error - uncomment during development
+
+        let jd = &mut serde_json::Deserializer::from_str(&json_text);
+
+        serde_path_to_error::deserialize(jd)
+            .map_err(|e| AppError::ParseError(e.path().to_owned(), e.into_inner()))
     }
 }
 

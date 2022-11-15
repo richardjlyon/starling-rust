@@ -1,6 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Direction {
@@ -164,15 +167,15 @@ pub struct Transaction {
     transaction_time: DateTime<Utc>,
     settlement_time: DateTime<Utc>,
     source: String,
-    source_sub_type: String,
+    source_sub_type: Option<String>,
     status: Status,
-    transacting_application_user_uid: uuid::Uuid,
+    transacting_application_user_uid: Option<uuid::Uuid>,
     counter_party_type: CounterpartyType,
-    counter_party_uid: uuid::Uuid,
+    counter_party_uid: Option<uuid::Uuid>,
     counter_party_name: String,
-    counter_party_sub_entity_uid: uuid::Uuid,
+    counter_party_sub_entity_uid: Option<uuid::Uuid>,
     counter_party_sub_entity_name: Option<String>,
-    counter_party_sub_entity_sub_identifier: Option<String>,
+    counter_party_sub_entity_sub_identifier: String,
     exchange_rate: Option<f32>,
     reference: Option<String>,
     country: String,
@@ -183,16 +186,28 @@ pub struct Transaction {
 
 impl Display for Transaction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let date = self.settlement_time.format("%Y-%m-%d");
         let status = match self.status {
             Status::SETTLED => "*",
             _ => "!",
         };
+        let account = match self.spending_category {
+            SpendingCategory::INCOME => String::from_str("Income").unwrap(),
+            _ => String::from_str("Other").unwrap(),
+        };
+        let amount = self.amount.minor_units;
+
+        let reference = self.reference.as_deref().unwrap_or_default();
 
         write!(
             f,
-            "{date} {status} ",
-            date = self.settlement_time,
-            status = status
+            "{date} {status} \"{counter_party_name:<25}\" \"{reference}\"\n  {account:<10} {amount}",
+            date = date,
+            status = status,
+            counter_party_name = self.counter_party_name,
+            reference = reference,
+            account = account,
+            amount = amount
         )
     }
 }
