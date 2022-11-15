@@ -22,7 +22,7 @@ pub fn transaction(account: &Account, transaction: &Transaction) -> String {
         reference = fmt_reference(transaction.reference.as_deref().unwrap_or_default()),
         balance_sheet_account = fmt_balance_sheet_account(&account.name),
         income_statement_account = fmt_income_statement_account(&transaction.spending_category, &transaction.direction),
-        amount = fmt_amount(&transaction.amount, &transaction.direction),
+        amount = fmt_amount(&transaction),
         user_note = fmt_user_note(&transaction.user_note.as_deref().unwrap_or_default()),
     )
 }
@@ -65,13 +65,9 @@ fn fmt_income_statement_account(
     format!("{}:{}", direction, category.to_case(Case::Pascal))
 }
 
-fn fmt_amount(amount: &SignedCurrencyAndAmount, direction: &Direction) -> String {
-    let result: f32 = amount.minor_units as f32;
-    let result = match direction {
-        Direction::IN => result / 100.0,
-        Direction::OUT => -result / 100.0,
-    };
-    format!("{:.2} {}", result, amount.currency)
+fn fmt_amount(transaction: &Transaction) -> String {
+    let amount = transaction.amount_as_float();
+    format!("{:.2} {}", amount, transaction.amount.currency)
 }
 
 fn fmt_user_note(user_note: &str) -> String {

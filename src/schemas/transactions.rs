@@ -184,6 +184,17 @@ pub struct Transaction {
     round_up: Option<RoundUp>,
 }
 
+impl Transaction {
+    // convert the amoun to a signed float value
+    pub fn amount_as_float(&self) -> f32 {
+        let amount: f32 = self.amount.minor_units as f32;
+        match self.direction {
+            Direction::IN => amount / 100.0,
+            Direction::OUT => -amount / 100.0,
+        }
+    }
+}
+
 impl Display for Transaction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let date = self.settlement_time.format("%Y-%m-%d");
