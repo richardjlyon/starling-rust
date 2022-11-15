@@ -1,7 +1,6 @@
 mod error;
 pub mod schemas;
 
-use anyhow::Context;
 use config::Config;
 use error::AppError;
 use reqwest::header;
@@ -19,6 +18,7 @@ const APIBASE: &str = "https://api.starlingbank.com/api/v2";
 // A Starling API client
 
 pub struct Client {
+    pub name: String,
     client: reqwest::Client,
 }
 
@@ -44,24 +44,23 @@ impl Client {
             .build()
             .unwrap();
 
-        Self { client: client }
+        Self {
+            client,
+            name: account_name.to_string(),
+        }
     }
 
     // endpoint /accounts
-    pub async fn accounts(&self) -> Vec<Account> {
-        let data: AccountResponse = self
-            .get("accounts", &())
+    pub async fn accounts(&self) -> Result<Vec<Account>, AppError> {
+        self.get("accounts", &())
             .await
-            .expect("Failed to get accounts");
-        data.accounts
+            .map(|d: AccountResponse| d.accounts)
     }
 
     // endpoint /accounts/account_uid/balancd
-    pub async fn balance(&self, account_uid: &AccountId) -> Balance {
+    pub async fn balance(&self, account_uid: &AccountId) -> Result<Balance, AppError> {
         let url = format!("accounts/{}/balance", account_uid);
-        let data: Balance = self.get(&url, &()).await.expect("Failed to get balance");
-
-        data
+        self.get(&url, &()).await
     }
 
     // endpoint /feed/account/account_uid/settled-transactions-between

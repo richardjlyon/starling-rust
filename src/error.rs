@@ -8,7 +8,7 @@ pub enum AppError {
     NotFound,
     #[error("network error")]
     NetworkError,
-    #[error("Error while parsing at path {0}: {1}")]
+    #[error("could not parse {0}: {1}")]
     ParseError(serde_path_to_error::Path, serde_json::Error),
     #[error("read error")]
     ReadError,
