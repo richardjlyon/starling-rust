@@ -1,4 +1,4 @@
-pub mod schemas;
+pub(crate) mod schemas;
 
 use std::time::Duration;
 
