@@ -2,13 +2,18 @@
 
 use chrono::format::{DelayedFormat, StrftimeItems};
 use chrono::{DateTime, Utc};
+use convert_case::{Case, Casing};
 use regex::Regex;
 use starling::schemas::accounts::{Account, SignedCurrencyAndAmount};
 use starling::schemas::transactions::{Direction, SpendingCategory, Status, Transaction};
 
+struct BeanTransaction {
+    account: Account,
+    transaction: Transaction,
+}
+
 pub fn transaction(account: &Account, transaction: &Transaction) -> String {
     // let date = transaction.settlement_time.format("%Y-%m-%d");
-
     format!(
         "{date} {status} {counter_party_name} \"{reference}\"\n  {balance_sheet_account:<25} {amount:>15} {user_note}\n  {income_statement_account}",
         date = fmt_date(&transaction.settlement_time),
@@ -56,11 +61,8 @@ fn fmt_income_statement_account(
         Direction::OUT => "Expenses",
     };
 
-    let category = match spending_category {
-        SpendingCategory::INCOME => "Income",
-        _ => "Other",
-    };
-    format!("{}:{}", direction, category)
+    let category = spending_category.as_ref();
+    format!("{}:{}", direction, category.to_case(Case::Pascal))
 }
 
 fn fmt_amount(amount: &SignedCurrencyAndAmount, direction: &Direction) -> String {

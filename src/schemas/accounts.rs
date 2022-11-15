@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum AccountType {
     PRIMARY,
     ADDITONAL,
@@ -14,7 +14,7 @@ pub struct AccountResponse {
     pub accounts: Vec<Account>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct AccountId(pub uuid::Uuid);
 
 impl Display for AccountId {
@@ -23,7 +23,7 @@ impl Display for AccountId {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     pub account_uid: AccountId,

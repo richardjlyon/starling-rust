@@ -23,7 +23,7 @@ pub enum CounterpartyType {
     LOAN,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, strum::AsRefStr)]
 pub enum SpendingCategory {
     BIKE,
     BILLS_AND_SERVICES,
