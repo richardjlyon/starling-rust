@@ -2,25 +2,23 @@
 
 use chrono::format::{DelayedFormat, StrftimeItems};
 use chrono::{DateTime, Utc};
+use regex::Regex;
 use starling::schemas::accounts::{Account, SignedCurrencyAndAmount};
-use starling::schemas::transactions::{SpendingCategory, Status, Transaction};
+use starling::schemas::transactions::{Direction, SpendingCategory, Status, Transaction};
 
 pub fn transaction(account: &Account, transaction: &Transaction) -> String {
     // let date = transaction.settlement_time.format("%Y-%m-%d");
 
-    let account = match transaction.spending_category {
-        SpendingCategory::INCOME => "Income",
-        _ => "Other",
-    };
-
     format!(
-        "{date} {status} {counter_party_name:<25} \"{reference}\"\n  {account:<10} {amount}",
+        "{date} {status} {counter_party_name} \"{reference}\"\n  {balance_sheet_account:<25} {amount:>15} {user_note}\n  {income_statement_account}",
         date = fmt_date(&transaction.settlement_time),
         status = fmt_status(&transaction.status),
         counter_party_name = fmt_counterparty_name(&transaction.counter_party_name),
         reference = fmt_reference(transaction.reference.as_deref().unwrap_or_default()),
-        account = account,
-        amount = fmt_amount(transaction.amount.minor_units),
+        balance_sheet_account = fmt_balance_sheet_account(&account.name),
+        income_statement_account = fmt_income_statement_account(&transaction.spending_category, &transaction.direction),
+        amount = fmt_amount(&transaction.amount, &transaction.direction),
+        user_note = fmt_user_note(&transaction.user_note.as_deref().unwrap_or_default()),
     )
 }
 
@@ -39,10 +37,44 @@ fn fmt_counterparty_name(name: &str) -> String {
     format!("\"{}\"", name.to_string())
 }
 
-fn fmt_reference(reference: &str) -> &str {
-    reference
+fn fmt_reference(reference: &str) -> String {
+    let re = Regex::new(r"\s+").unwrap();
+    let clean_string = re.replace_all(reference, " ");
+    clean_string.to_string()
 }
 
-fn fmt_amount(amount: i64) -> i64 {
-    amount
+fn fmt_balance_sheet_account(account_name: &String) -> String {
+    format!("Assets:Starling:{}", account_name)
+}
+
+fn fmt_income_statement_account(
+    spending_category: &SpendingCategory,
+    direction: &Direction,
+) -> String {
+    let direction = match direction {
+        Direction::IN => "Income",
+        Direction::OUT => "Expenses",
+    };
+
+    let category = match spending_category {
+        SpendingCategory::INCOME => "Income",
+        _ => "Other",
+    };
+    format!("{}:{}", direction, category)
+}
+
+fn fmt_amount(amount: &SignedCurrencyAndAmount, direction: &Direction) -> String {
+    let result: f32 = amount.minor_units as f32;
+    let result = match direction {
+        Direction::IN => result / 100.0,
+        Direction::OUT => -result / 100.0,
+    };
+    format!("{:.2} {}", result, amount.currency)
+}
+
+fn fmt_user_note(user_note: &str) -> String {
+    match user_note.is_empty() {
+        true => String::new(),
+        false => format!("; {}", user_note),
+    }
 }

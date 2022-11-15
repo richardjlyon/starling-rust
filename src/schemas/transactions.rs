@@ -162,7 +162,7 @@ pub struct Transaction {
     transaction_uid: TransactionId,
     category_uid: CategoryId,
     pub amount: super::accounts::SignedCurrencyAndAmount,
-    direction: Direction,
+    pub direction: Direction,
     updated_at: DateTime<Utc>,
     transaction_time: DateTime<Utc>,
     pub settlement_time: DateTime<Utc>,
@@ -180,7 +180,7 @@ pub struct Transaction {
     pub reference: Option<String>,
     country: String,
     pub spending_category: SpendingCategory,
-    user_note: Option<String>,
+    pub user_note: Option<String>,
     round_up: Option<RoundUp>,
 }
 
