@@ -44,7 +44,7 @@ impl Client {
         Self { client: client }
     }
 
-    // /accounts
+    // endpoint /accounts
     pub async fn accounts(&self) -> Vec<Account> {
         let data: AccountResponse = self
             .get("accounts", &())
@@ -53,7 +53,7 @@ impl Client {
         data.accounts
     }
 
-    // /accounts/account_uid/balancd
+    // endpoint /accounts/account_uid/balancd
     pub async fn balance(&self, account_uid: &AccountId) -> Balance {
         let url = format!("accounts/{}/balance", account_uid);
         let data: Balance = self.get(&url, &()).await.expect("Failed to get balance");
@@ -61,7 +61,7 @@ impl Client {
         data
     }
 
-    // transactions
+    // endpoint /feed/account/account_uid/settled-transactions-between
     pub async fn transactions(
         &self,
         account_uid: &AccountId,
