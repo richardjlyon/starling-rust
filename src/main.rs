@@ -17,6 +17,7 @@ mod schemas;
 
 use anyhow::Context;
 use itertools::Itertools;
+use rust_decimal::Decimal;
 use starling::schemas::{accounts::Account, transactions::Transaction};
 
 #[tokio::main]
@@ -44,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
 
     // all transactions for personal and business
     let mut transaction_data: Vec<TransactionData> = Vec::new();
-    let mut transaction_total = 0;
+    let mut transaction_total: Decimal;
 
     // get all transactions for the specified period
     for client in &[personal, business] {
@@ -57,10 +58,10 @@ async fn main() -> anyhow::Result<()> {
                 .await
                 .context("when fetching transactions")?;
 
-            transaction_total = 0;
+            transaction_total = Decimal::ZERO;
 
             for transaction in transactions {
-                transaction_total += transaction.amount.minor_units;
+                transaction_total += transaction.to_decimal();
                 transaction_data.push(TransactionData {
                     account: account.clone(),
                     transaction,
@@ -81,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
             let entry = bean::transaction::transaction(&t.account, &t.transaction);
-            println!("{}", entry);
+            // println!("{}", entry);
         });
 
     Ok(())
