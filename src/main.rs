@@ -73,6 +73,9 @@ async fn main() -> anyhow::Result<()> {
                 account.name,
                 transaction_total
             );
+
+            let open_entry = bean::open::open(&now, &account, &String::from("GBP"));
+            tracing::info!("Open statement: {}", open_entry);
         }
     }
 
@@ -82,7 +85,7 @@ async fn main() -> anyhow::Result<()> {
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
             let entry = bean::transactions::transactions(&t.account, &t.transaction);
-            println!("{}", entry);
+            // println!("{}", entry);
         });
 
     Ok(())

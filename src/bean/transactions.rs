@@ -4,12 +4,26 @@ use chrono::format::{DelayedFormat, StrftimeItems};
 use chrono::{DateTime, Utc};
 use convert_case::{Case, Casing};
 use regex::Regex;
+use rust_decimal::Decimal;
 use starling::schemas::accounts::{Account, SignedCurrencyAndAmount};
 use starling::schemas::transactions::{Direction, SpendingCategory, Status, Transaction};
 
 struct BeanTransaction {
     account: Account,
     transaction: Transaction,
+}
+
+pub fn transaction(
+    date: DateTime<Utc>,
+    status: Status,
+    counter_party_name: &String,
+    reference: &String,
+    balance_sheet_account: &String,
+    income_statement_account: &String,
+    amount: Decimal,
+    currency: &String,
+) -> String {
+    String::new()
 }
 
 pub fn transactions(account: &Account, transaction: &Transaction) -> String {
@@ -76,5 +90,14 @@ fn fmt_user_note(user_note: &str) -> String {
     match user_note.is_empty() {
         true => String::new(),
         false => format!("; {}", user_note),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_formats_transaction() {
+        let result = 2 + 2;
+        assert_eq!(result, 4);
     }
 }
