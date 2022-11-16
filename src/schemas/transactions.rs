@@ -2,126 +2,127 @@ use chrono::{DateTime, Utc};
 
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::{
-    fmt::{Display, Formatter},
-    str::FromStr,
-};
+use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Direction {
-    IN,
-    OUT,
+    In,
+    Out,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum CounterpartyType {
-    CATEGORY,
-    CHEQUE,
-    CUSTOMER,
-    PAYEE,
-    MERCHANT,
-    SENDER,
-    STARLING,
-    LOAN,
+    Category,
+    Cheque,
+    Customer,
+    Payee,
+    Merchant,
+    Sender,
+    Starling,
+    Loan,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, strum::AsRefStr)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum SpendingCategory {
-    BIKE,
-    BILLS_AND_SERVICES,
-    BUCKET_LIST,
-    CAR,
-    CASH,
-    CELEBRATION,
-    CHARITY,
-    CHILDREN,
-    COFFEE,
-    DEBT_REPAYMENT,
-    DIY,
-    DRINKS,
-    EATING_OUT,
-    EDUCATION,
-    EMERGENCY,
-    ENTERTAINMENT,
-    ESSENTIAL_SPEND,
-    EXPENSES,
-    FAMILY,
-    FITNESS,
-    FUEL,
-    GAMBLING,
-    GAMING,
-    GARDEN,
-    GENERAL,
-    GIFTS,
-    GROCERIES,
-    HOBBY,
-    HOLIDAYS,
-    HOME,
-    IMPULSE_BUY,
-    INCOME,
-    INSURANCE,
-    INVESTMENTS,
-    LIFESTYLE,
-    MAINTENANCE_AND_REPAIRS,
-    MEDICAL,
-    MORTGAGE,
-    NON_ESSENTIAL_SPEND,
-    PAYMENTS,
-    PERSONAL_TRANSFERS,
-    PETS,
-    PROJECTS,
-    RELATIONSHIPS,
-    RENT,
-    SAVING,
-    SHOPPING,
-    SUBSCRIPTIONS,
-    TAKEAWAY,
-    TAXI,
-    TRANSPORT,
-    TREATS,
-    WEDDING,
-    WELLBEING,
-    NONE,
-    REVENUE,
-    OTHER_INCOME,
-    CLIENT_REFUNDS,
-    INVENTORY,
-    STAFF,
-    TRAVEL,
-    WORKPLACE,
-    REPAIRS_AND_MAINTENANCE,
-    ADMIN,
-    MARKETING,
-    BUSINESS_ENTERTAINMENT,
-    INTEREST_PAYMENTS,
-    BANK_CHARGES,
-    OTHER,
-    FOOD_AND_DRINK,
-    EQUIPMENT,
-    PROFESSIONAL_SERVICES,
-    PHONE_AND_INTERNET,
-    VEHICLES,
-    DIRECTORS_WAGES,
-    VAT,
-    CORPORATION_TAX,
-    SELF_ASSESSMENT_TAX,
-    INVESTMENT_CAPITAL,
-    TRANSFERS,
-    LOAN_PRINCIPAL,
-    PERSONAL,
-    DIVIDENDS,
+    Bike,
+    BillsAndServices,
+    BucketList,
+    Car,
+    Cash,
+    Celebration,
+    Charity,
+    Children,
+    Coffee,
+    DebtRepayment,
+    Diy,
+    Drinks,
+    EatingOut,
+    Education,
+    Emergency,
+    Entertainment,
+    EssentialSpend,
+    Expenses,
+    Family,
+    Fitness,
+    Fuel,
+    Gambling,
+    Gaming,
+    Garden,
+    General,
+    Gifts,
+    Groceries,
+    Hobby,
+    Holidays,
+    Home,
+    ImpulseBuy,
+    Income,
+    Insurance,
+    Investments,
+    Lifestyle,
+    MaintenanceAndRepairs,
+    Medical,
+    Mortgage,
+    NonEssentialSpend,
+    Payments,
+    PersonalTransfers,
+    Pets,
+    Projects,
+    Relationships,
+    Rent,
+    Saving,
+    Shopping,
+    Subscriptions,
+    Takeaway,
+    Taxi,
+    Transport,
+    Treats,
+    Wedding,
+    Wellbeing,
+    None,
+    Revenue,
+    OtherIncome,
+    ClientRefunds,
+    Inventory,
+    Staff,
+    Travel,
+    Workplace,
+    RepairsAndMaintenance,
+    Admin,
+    Marketing,
+    BusinessEntertainment,
+    InterestPayments,
+    BankCharges,
+    Other,
+    FoodAndDrink,
+    Equipment,
+    ProfessionalServices,
+    PhoneAndInternet,
+    Vehicles,
+    DirectorsWages,
+    Vat,
+    CorporationTax,
+    SelfAssessmentTax,
+    InvestmentCapital,
+    Transfers,
+    LoanPrincipal,
+    Personal,
+    Dividends,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Status {
-    UPCOMING,
-    PENDING,
-    REVERSED,
-    SETTLED,
-    DECLINED,
-    REFUNDED,
-    RETRYING,
-    ACCOUNT_CHECK,
+    Upcoming,
+    Pending,
+    Reversed,
+    Settled,
+    Declined,
+    Refunded,
+    Retrying,
+    AccountCheck,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -163,15 +164,15 @@ pub enum Currencies {
     EUR,
 }
 
-impl Currencies {
-    pub fn decimals(&self) -> u32 {
-        match self {
-            Currencies::GBP => 2,
-            Currencies::EUR => 2,
-            _ => 2,
-        }
-    }
-}
+// impl Currencies {
+//     pub fn decimals(&self) -> u32 {
+//         match self {
+//             Currencies::GBP => 2,
+//             Currencies::EUR => 2,
+//             _ => 2,
+//         }
+//     }
+// }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -207,8 +208,8 @@ impl Transaction {
         // FIXME implement currency decimal functionality
         const DEC: u32 = 2;
         match self.direction {
-            Direction::IN => Decimal::new(self.amount.minor_units, DEC),
-            Direction::OUT => Decimal::new(-self.amount.minor_units, DEC),
+            Direction::In => Decimal::new(self.amount.minor_units, DEC),
+            Direction::Out => Decimal::new(-self.amount.minor_units, DEC),
         }
     }
 }

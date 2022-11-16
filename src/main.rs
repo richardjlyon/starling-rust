@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
         transaction: Transaction,
     }
 
-    let file = std::fs::File::create("starling.bean")?;
+    // let file = std::fs::File::create("starling.bean")?;
 
     // let stream = futures::stream::iter(&[personal, business]);
     // expand each client
@@ -84,7 +84,7 @@ async fn main() -> anyhow::Result<()> {
         .iter()
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
-            let entry = bean::transactions::transactions(&t.account, &t.transaction);
+            // let entry = bean::transactions::transactions(&t.account, &t.transaction);
             // println!("{}", entry);
         });
 

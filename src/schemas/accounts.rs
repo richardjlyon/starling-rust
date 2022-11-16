@@ -1,13 +1,13 @@
-use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AccountType {
-    PRIMARY,
-    ADDITONAL,
-    LOAN,
-    FIXED_TERM_DEPOSIT,
+    Primary,
+    Additonal,
+    Loan,
+    FixedTermDeposit,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

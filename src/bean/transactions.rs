@@ -5,13 +5,8 @@ use chrono::{DateTime, Utc};
 use convert_case::{Case, Casing};
 use regex::Regex;
 use rust_decimal::Decimal;
-use starling::schemas::accounts::{Account, SignedCurrencyAndAmount};
+use starling::schemas::accounts::Account;
 use starling::schemas::transactions::{Direction, SpendingCategory, Status, Transaction};
-
-struct BeanTransaction {
-    account: Account,
-    transaction: Transaction,
-}
 
 pub fn transaction(
     date: DateTime<Utc>,
@@ -46,7 +41,7 @@ fn fmt_date(time: &DateTime<Utc>) -> DelayedFormat<StrftimeItems> {
 
 fn fmt_status(status: &Status) -> &str {
     match status {
-        Status::SETTLED => "*",
+        Status::Settled => "*",
         _ => "!",
     }
 }
@@ -70,8 +65,8 @@ fn fmt_income_statement_account(
     direction: &Direction,
 ) -> String {
     let direction = match direction {
-        Direction::IN => "Income",
-        Direction::OUT => "Expenses",
+        Direction::In => "Income",
+        Direction::Out => "Expenses",
     };
 
     let category = spending_category.as_ref();
