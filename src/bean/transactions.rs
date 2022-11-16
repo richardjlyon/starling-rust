@@ -18,7 +18,22 @@ pub fn transaction(
     amount: Decimal,
     currency: &String,
 ) -> String {
-    String::new()
+    format!(
+        "{date} {status} {counter_party_name} {reference}\n  {balance_sheet_account:<50} {amount:>10}\n{income_statement_account:<50} {negative_amount:>10}",
+        date = fmt_date(&date),
+        status = fmt_status(&status),
+        counter_party_name = fmt_counterparty_name(&counter_party_name),
+        reference = fmt_reference(&reference),
+        amount = fmt_amount_with_currency(&amount, &currency, true),
+        negative_amount =fmt_amount_with_currency(&amount, &currency, false)
+    )
+}
+
+fn fmt_amount_with_currency(amount: &Decimal, currency: &String, make_negative: bool) -> String {
+    match make_negative {
+        false => format!("{} {}", amount.to_string(), currency),
+        true => format!("{} {}", (Decimal::ZERO - amount).to_string(), currency),
+    }
 }
 
 pub fn transactions(account: &Account, transaction: &Transaction) -> String {
@@ -53,7 +68,7 @@ fn fmt_counterparty_name(name: &str) -> String {
 fn fmt_reference(reference: &str) -> String {
     let re = Regex::new(r"\s+").unwrap();
     let clean_string = re.replace_all(reference, " ");
-    clean_string.to_string()
+    format!("\"{}\"", clean_string.to_string())
 }
 
 fn fmt_balance_sheet_account(account_name: &String) -> String {
@@ -90,9 +105,37 @@ fn fmt_user_note(user_note: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use chrono::{DateTime, TimeZone};
+    use rust_decimal::Decimal;
+    use starling::schemas::transactions::Status;
+
+    use super::transaction;
+
     #[test]
     fn it_formats_transaction() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
+        let date = chrono::Utc::now();
+        let status = Status::Settled;
+        let counter_party_name = String::from("Tesco");
+        let reference = String::from("TESCO-STORES 6557 EDINBURGH GBR");
+        let balance_sheet_account = String::from("Assets:Starling:Business");
+        let income_statement_account = String::from("Expenses:BillsAndServices");
+        let amount = Decimal::new(12345, 2);
+        let currency = String::from("GBP");
+
+        let result = transaction(
+            date,
+            status,
+            &counter_party_name,
+            &reference,
+            &balance_sheet_account,
+            &income_statement_account,
+            amount,
+            &currency,
+        );
+
+        assert_eq!(
+            "2022-11-16 * \"Tesco\" \"TESCO-STORES 6557 EDINBURGH GBR\"\n  Assets:Starling:Business                           -123.45 GBP\nExpenses:BillsAndServices                          123.45 GBP", result,
+            "Responses should be equal"
+        );
     }
 }

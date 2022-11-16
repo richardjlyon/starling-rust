@@ -27,3 +27,5 @@ itertools = "0.10.5"
 rust_decimal = "1.26.1"
 rust_decimal_macros = "1.26.1"
 
+[dev-dependencies]
+
