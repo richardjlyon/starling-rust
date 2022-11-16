@@ -24,4 +24,6 @@ regex = "1.7.0"
 strum = { version = "0.24.1", features = ["derive"] }
 convert_case = "0.6.0"
 itertools = "0.10.5"
+rust_decimal = "1.26.1"
+rust_decimal_macros = "1.26.1"
 

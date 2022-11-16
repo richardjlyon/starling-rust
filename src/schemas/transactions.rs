@@ -1,17 +1,18 @@
 use chrono::{DateTime, Utc};
+
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Display, Formatter},
     str::FromStr,
 };
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Direction {
     IN,
     OUT,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum CounterpartyType {
     CATEGORY,
     CHEQUE,
@@ -23,7 +24,7 @@ pub enum CounterpartyType {
     LOAN,
 }
 
-#[derive(Serialize, Deserialize, Debug, strum::AsRefStr)]
+#[derive(Serialize, Deserialize, Debug, Clone, strum::AsRefStr)]
 pub enum SpendingCategory {
     BIKE,
     BILLS_AND_SERVICES,
@@ -110,7 +111,7 @@ pub enum SpendingCategory {
     DIVIDENDS,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Status {
     UPCOMING,
     PENDING,
@@ -128,7 +129,7 @@ pub struct TransactionResponse {
     pub feed_items: Vec<Transaction>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RoundUp {
     description: String,
@@ -136,7 +137,7 @@ pub struct RoundUp {
     amount: super::accounts::SignedCurrencyAndAmount,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct TransactionId(pub uuid::Uuid);
 
@@ -146,7 +147,7 @@ impl Display for TransactionId {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CategoryId(pub uuid::Uuid);
 
 impl Display for CategoryId {
@@ -155,7 +156,7 @@ impl Display for CategoryId {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
     #[serde(rename = "feedItemUid")]
@@ -182,17 +183,6 @@ pub struct Transaction {
     pub spending_category: SpendingCategory,
     pub user_note: Option<String>,
     round_up: Option<RoundUp>,
-}
-
-impl Transaction {
-    // convert the amoun to a signed float value
-    pub fn amount_as_float(&self) -> f32 {
-        let amount: f32 = self.amount.minor_units as f32;
-        match self.direction {
-            Direction::IN => amount / 100.0,
-            Direction::OUT => -amount / 100.0,
-        }
-    }
 }
 
 impl Display for Transaction {

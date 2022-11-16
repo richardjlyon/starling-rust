@@ -13,7 +13,6 @@ struct BeanTransaction {
 }
 
 pub fn transaction(account: &Account, transaction: &Transaction) -> String {
-    // let date = transaction.settlement_time.format("%Y-%m-%d");
     format!(
         "{date} {status} {counter_party_name} \"{reference}\"\n  {balance_sheet_account:<25} {amount:>15} {user_note}\n  {income_statement_account}",
         date = fmt_date(&transaction.settlement_time),
@@ -66,8 +65,11 @@ fn fmt_income_statement_account(
 }
 
 fn fmt_amount(transaction: &Transaction) -> String {
-    let amount = transaction.amount_as_float();
-    format!("{:.2} {}", amount, transaction.amount.currency)
+    let amount = match transaction.direction {
+        Direction::IN => transaction.amount.to_decimal(),
+        Direction::OUT => -transaction.amount.to_decimal(),
+    };
+    format!("{} {}", amount.to_string(), transaction.amount.currency)
 }
 
 fn fmt_user_note(user_note: &str) -> String {
