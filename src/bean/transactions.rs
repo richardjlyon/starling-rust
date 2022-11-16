@@ -1,5 +1,5 @@
-// Implement functionality to format for beancount
-
+/// Beancount `Transactions` directive
+///
 use chrono::format::{DelayedFormat, StrftimeItems};
 use chrono::{DateTime, Utc};
 use convert_case::{Case, Casing};
@@ -12,7 +12,7 @@ struct BeanTransaction {
     transaction: Transaction,
 }
 
-pub fn transaction(account: &Account, transaction: &Transaction) -> String {
+pub fn transactions(account: &Account, transaction: &Transaction) -> String {
     format!(
         "{date} {status} {counter_party_name} \"{reference}\"\n  {balance_sheet_account:<25} {amount:>15} {user_note}\n  {income_statement_account}",
         date = fmt_date(&transaction.settlement_time),

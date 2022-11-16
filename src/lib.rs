@@ -147,16 +147,16 @@ fn get_key(account_name: &str) -> String {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn exploration() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
+// #[cfg(test)]
+// mod tests {
+//     #[test]
+//     fn exploration() {
+//         let result = 2 + 2;
+//         assert_eq!(result, 4);
+//     }
 
-    #[test]
-    fn another() {
-        panic!("It panics!");
-    }
-}
+//     #[test]
+//     fn another() {
+//         panic!("It panics!");
+//     }
+// }

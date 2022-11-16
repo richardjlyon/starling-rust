@@ -81,8 +81,8 @@ async fn main() -> anyhow::Result<()> {
         .iter()
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
-            let entry = bean::transaction::transaction(&t.account, &t.transaction);
-            // println!("{}", entry);
+            let entry = bean::transactions::transactions(&t.account, &t.transaction);
+            println!("{}", entry);
         });
 
     Ok(())
