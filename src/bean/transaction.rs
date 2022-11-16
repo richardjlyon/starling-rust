@@ -65,11 +65,11 @@ fn fmt_income_statement_account(
 }
 
 fn fmt_amount(transaction: &Transaction) -> String {
-    let amount = match transaction.direction {
-        Direction::IN => transaction.amount.to_decimal(),
-        Direction::OUT => -transaction.amount.to_decimal(),
-    };
-    format!("{} {}", amount.to_string(), transaction.amount.currency)
+    format!(
+        "{} {}",
+        transaction.to_decimal().to_string(),
+        transaction.amount.currency
+    )
 }
 
 fn fmt_user_note(user_note: &str) -> String {

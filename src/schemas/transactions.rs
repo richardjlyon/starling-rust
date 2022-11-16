@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Display, Formatter},
@@ -156,6 +157,22 @@ impl Display for CategoryId {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, strum::Display)]
+pub enum Currencies {
+    GBP,
+    EUR,
+}
+
+impl Currencies {
+    pub fn decimals(&self) -> u32 {
+        match self {
+            Currencies::GBP => 2,
+            Currencies::EUR => 2,
+            _ => 2,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
@@ -183,6 +200,17 @@ pub struct Transaction {
     pub spending_category: SpendingCategory,
     pub user_note: Option<String>,
     round_up: Option<RoundUp>,
+}
+
+impl Transaction {
+    pub fn to_decimal(&self) -> Decimal {
+        // FIXME implement currency decimal functionality
+        const DEC: u32 = 2;
+        match self.direction {
+            Direction::IN => Decimal::new(self.amount.minor_units, DEC),
+            Direction::OUT => Decimal::new(-self.amount.minor_units, DEC),
+        }
+    }
 }
 
 impl Display for Transaction {

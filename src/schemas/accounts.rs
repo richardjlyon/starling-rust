@@ -35,34 +35,11 @@ pub struct Account {
     pub account_type: AccountType,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, strum::Display)]
-pub enum Currencies {
-    GBP,
-    EUR,
-}
-
-impl Currencies {
-    pub fn decimals(&self) -> u32 {
-        match self {
-            Currencies::GBP => 2,
-            Currencies::EUR => 2,
-            _ => 2,
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SignedCurrencyAndAmount {
-    pub currency: Currencies,
+    pub currency: String,
     pub minor_units: i64,
-}
-
-impl SignedCurrencyAndAmount {
-    pub fn to_decimal(&self) -> Decimal {
-        let dec: u32 = self.currency.decimals();
-        Decimal::new(self.minor_units, dec)
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
