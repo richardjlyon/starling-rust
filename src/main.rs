@@ -13,21 +13,23 @@
 //! - tokio streams https://tokio.rs/tokio/tutorial/streams
 
 mod bean;
-mod schemas;
+mod starling;
 
-use anyhow::Context;
-use bean::directives::{open, transactions};
-use budget::schemas::{accounts::Account, transactions::Transaction};
+use bean::directives::open::open as bean_open;
+use bean::directives::transactions::transaction as bean_transaction;
 use itertools::Itertools;
 use rust_decimal::Decimal;
+use starling::client::Client as StarlingClient;
+use starling::schemas::accounts::Account;
+use starling::schemas::transactions::Transaction;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
 
-    let personal = budget::Client::new("personal");
-    let business = budget::Client::new("business");
+    let personal = StarlingClient::new("personal");
+    let business = StarlingClient::new("business");
     let now = chrono::Utc::now();
 
     struct TransactionData {
@@ -75,7 +77,7 @@ async fn main() -> anyhow::Result<()> {
                 transaction_total
             );
 
-            let open_entry = open::open(&now, &account, &String::from("GBP"));
+            let open_entry = bean_open(&now, &account, &String::from("GBP"));
             tracing::info!("Open statement: {}", open_entry);
         }
     }
@@ -85,8 +87,8 @@ async fn main() -> anyhow::Result<()> {
         .iter()
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
-            let entry = transactions::transactions(&t.account, &t.transaction);
-            println!("{}", entry);
+            // let entry = bean_transaction(&t.account, &t.transaction);
+            // println!("{}", entry);
         });
 
     Ok(())

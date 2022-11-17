@@ -214,34 +214,6 @@ impl Transaction {
     }
 }
 
-// impl Display for Transaction {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-//         let date = self.settlement_time.format("%Y-%m-%d");
-//         let status = match self.status {
-//             Status::SETTLED => "*",
-//             _ => "!",
-//         };
-//         let account = match self.spending_category {
-//             SpendingCategory::INCOME => String::from_str("Income").unwrap(),
-//             _ => String::from_str("Other").unwrap(),
-//         };
-//         let amount = self.amount.minor_units;
-
-//         let reference = self.reference.as_deref().unwrap_or_default();
-
-//         write!(
-//             f,
-//             "{date} {status} \"{counter_party_name:<25}\" \"{reference}\"\n  {account:<10} {amount}",
-//             date = date,
-//             status = status,
-//             counter_party_name = self.counter_party_name,
-//             reference = reference,
-//             account = account,
-//             amount = amount
-//         )
-//     }
-// }
-
 // alias (multiple)
 // DESER = {key: ()} -> {alias: ()}
 // SER   = {alias: ()} -> {alias: ()}
