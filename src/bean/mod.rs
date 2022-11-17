@@ -1,5 +1,6 @@
-pub mod open;
-pub mod transactions;
+/// Beancount functionality
+///
+pub mod directives;
 
 // pub enum AccountTypes {
 //     Assets,

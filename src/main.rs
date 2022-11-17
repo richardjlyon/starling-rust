@@ -16,17 +16,18 @@ mod bean;
 mod schemas;
 
 use anyhow::Context;
+use bean::directives::{open, transactions};
+use budget::schemas::{accounts::Account, transactions::Transaction};
 use itertools::Itertools;
 use rust_decimal::Decimal;
-use starling::schemas::{accounts::Account, transactions::Transaction};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // install global collector configured based on RUST_LOG env var.
     tracing_subscriber::fmt::init();
 
-    let personal = starling::Client::new("personal");
-    let business = starling::Client::new("business");
+    let personal = budget::Client::new("personal");
+    let business = budget::Client::new("business");
     let now = chrono::Utc::now();
 
     struct TransactionData {
@@ -74,7 +75,7 @@ async fn main() -> anyhow::Result<()> {
                 transaction_total
             );
 
-            let open_entry = bean::open::open(&now, &account, &String::from("GBP"));
+            let open_entry = open::open(&now, &account, &String::from("GBP"));
             tracing::info!("Open statement: {}", open_entry);
         }
     }
@@ -84,7 +85,7 @@ async fn main() -> anyhow::Result<()> {
         .iter()
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
-            let entry = bean::transactions::transactions(&t.account, &t.transaction);
+            let entry = transactions::transactions(&t.account, &t.transaction);
             println!("{}", entry);
         });
 
