@@ -11,25 +11,29 @@ use crate::starling::schemas::{
     transactions::{Direction, SpendingCategory, Status, Transaction},
 };
 
+pub struct TransactionParameters {
+    pub date: DateTime<Utc>,
+    pub status: Status,
+    pub counter_party_name: String,
+    pub reference: String,
+    pub balance_sheet_account: String,
+    pub income_statement_account: String,
+    pub amount: Decimal,
+    pub currency: String,
+}
+
 /// Beancount `Transactions` directive
-pub fn transaction(
-    date: DateTime<Utc>,
-    status: Status,
-    counter_party_name: &String,
-    reference: &String,
-    balance_sheet_account: &String,
-    income_statement_account: &String,
-    amount: Decimal,
-    currency: &String,
-) -> String {
+pub fn transaction(params: TransactionParameters) -> String {
     format!(
         "{date} {status} {counter_party_name} {reference}\n  {balance_sheet_account:<50} {amount:>10}\n{income_statement_account:<50} {negative_amount:>10}",
-        date = fmt_date(&date),
-        status = fmt_status(&status),
-        counter_party_name = fmt_counterparty_name(&counter_party_name),
-        reference = fmt_reference(&reference),
-        amount = fmt_amount_with_currency(&amount, &currency, true),
-        negative_amount =fmt_amount_with_currency(&amount, &currency, false)
+        date = fmt_date(&params.date),
+        status = fmt_status(&params.status),
+        counter_party_name = fmt_counterparty_name(&params.counter_party_name),
+        reference = fmt_reference(&params.reference),
+        balance_sheet_account = params.balance_sheet_account,
+        income_statement_account = params.income_statement_account,
+        amount = fmt_amount_with_currency(&params.amount, &params.currency, true),
+        negative_amount =fmt_amount_with_currency(&params.amount, &params.currency, false)
     )
 }
 

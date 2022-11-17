@@ -14,6 +14,8 @@
 
 use anyhow::Context;
 use budget::bean::directives::open::open as bean_open;
+use budget::bean::directives::transactions::transaction as bean_transaction;
+use budget::bean::directives::transactions::TransactionParameters;
 use budget::starling::{
     client::Client as StarlingClient,
     schemas::{accounts::Account, transactions::Transaction},
@@ -85,8 +87,24 @@ async fn main() -> anyhow::Result<()> {
         .iter()
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
-            // let entry = bean_transaction(&t.account, &t.transaction);
-            // println!("{}", entry);
+            let params = TransactionParameters {
+                date: t.transaction.settlement_time,
+                status: t.transaction.status.clone(),
+                counter_party_name: t.transaction.counter_party_name.clone(),
+                reference: t
+                    .transaction
+                    .reference
+                    .as_deref()
+                    .unwrap_or_default()
+                    .to_string(),
+                balance_sheet_account: String::from("TODO"),
+                income_statement_account: String::from("TODO"),
+                amount: t.transaction.to_decimal(),
+                currency: t.account.currency.clone(),
+            };
+            let entry = bean_transaction(params);
+
+            println!("{}", entry);
         });
 
     Ok(())
