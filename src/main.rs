@@ -12,16 +12,14 @@
 //! - tokio channels https://tokio.rs/tokio/tutorial/channels
 //! - tokio streams https://tokio.rs/tokio/tutorial/streams
 
-mod bean;
-mod starling;
-
-use bean::directives::open::open as bean_open;
-use bean::directives::transactions::transaction as bean_transaction;
+use anyhow::Context;
+use budget::bean::directives::open::open as bean_open;
+use budget::starling::{
+    client::Client as StarlingClient,
+    schemas::{accounts::Account, transactions::Transaction},
+};
 use itertools::Itertools;
 use rust_decimal::Decimal;
-use starling::client::Client as StarlingClient;
-use starling::schemas::accounts::Account;
-use starling::schemas::transactions::Transaction;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
