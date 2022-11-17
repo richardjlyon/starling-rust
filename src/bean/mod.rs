@@ -1,5 +1,5 @@
-/// Beancount functionality
-///
+//! Beancount functionality
+
 pub mod directives;
 
 // pub enum AccountTypes {

@@ -1,5 +1,3 @@
-/// Beancount `Transactions` directive
-///
 use chrono::{
     format::{DelayedFormat, StrftimeItems},
     DateTime, Utc,
@@ -13,6 +11,7 @@ use crate::starling::schemas::{
     transactions::{Direction, SpendingCategory, Status, Transaction},
 };
 
+/// Beancount `Transactions` directive
 pub fn transaction(
     date: DateTime<Utc>,
     status: Status,

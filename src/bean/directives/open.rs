@@ -1,5 +1,3 @@
-/// Beancount `open` directive
-///
 use chrono::{
     format::{DelayedFormat, StrftimeItems},
     DateTime, Utc,
@@ -7,6 +5,7 @@ use chrono::{
 
 use crate::starling::schemas::accounts::Account;
 
+/// Beancount `open` directive
 pub fn open(date: &DateTime<Utc>, account: &Account, currency: &String) -> String {
     format!(
         "{date} open {balance_sheet_account:<25} {currency}",
