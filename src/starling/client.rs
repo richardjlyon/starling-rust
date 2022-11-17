@@ -1,18 +1,17 @@
-mod error;
-mod super::schemas;
-
-use config::Config;
-use error::AppError;
-use reqwest::header;
-use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
-use reqwest::StatusCode;
-use schemas::accounts::{Account, AccountId, AccountResponse, Balance};
-use schemas::transactions::Transaction;
-use serde::de::DeserializeOwned;
-
 use std::collections::HashMap;
 
-use crate::starling::schemas::transactions::TransactionResponse;
+use config::Config;
+use reqwest::{
+    header::{self, ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+    StatusCode,
+};
+use serde::de::DeserializeOwned;
+
+use crate::error::AppError;
+use crate::starling::schemas::{
+    accounts::{Account, AccountId, AccountResponse, Balance},
+    transactions::{Transaction, TransactionResponse},
+};
 
 // use crate::schemas::transactions::{Transaction, TransactionResponse};
 // use crate::starling::schemas::accounts::{Account, AccountId, AccountResponse, Balance};

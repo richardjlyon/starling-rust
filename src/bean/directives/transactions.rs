@@ -1,12 +1,17 @@
-use budget::schemas::accounts::Account;
-use budget::schemas::transactions::{Direction, SpendingCategory, Status, Transaction};
 /// Beancount `Transactions` directive
 ///
-use chrono::format::{DelayedFormat, StrftimeItems};
-use chrono::{DateTime, Utc};
+use chrono::{
+    format::{DelayedFormat, StrftimeItems},
+    DateTime, Utc,
+};
 use convert_case::{Case, Casing};
 use regex::Regex;
 use rust_decimal::Decimal;
+
+use crate::starling::schemas::{
+    accounts::Account,
+    transactions::{Direction, SpendingCategory, Status, Transaction},
+};
 
 pub fn transaction(
     date: DateTime<Utc>,
@@ -105,7 +110,7 @@ fn fmt_user_note(user_note: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use budget::schemas::transactions::Status;
+    use crate::starling::schemas::transactions::Status;
     use chrono::{DateTime, TimeZone};
     use rust_decimal::Decimal;
 

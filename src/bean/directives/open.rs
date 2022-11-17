@@ -1,8 +1,11 @@
-use budget::schemas::accounts::Account;
 /// Beancount `open` directive
 ///
-use chrono::format::{DelayedFormat, StrftimeItems};
-use chrono::{DateTime, Utc};
+use chrono::{
+    format::{DelayedFormat, StrftimeItems},
+    DateTime, Utc,
+};
+
+use crate::starling::schemas::accounts::Account;
 
 pub fn open(date: &DateTime<Utc>, account: &Account, currency: &String) -> String {
     format!(
