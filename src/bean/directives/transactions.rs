@@ -1,65 +1,54 @@
-use chrono::{
-    format::{DelayedFormat, StrftimeItems},
-    DateTime, Utc,
-};
+use crate::bean::BeanTransaction;
+use crate::starling::schemas::transactions::{Direction, Status};
+use chrono::{DateTime, Utc};
 use convert_case::{Case, Casing};
 use regex::Regex;
 use rust_decimal::Decimal;
+use std::fmt;
 
-use crate::starling::schemas::{
-    accounts::Account,
-    transactions::{Direction, SpendingCategory, Status, Transaction},
-};
+impl BeanTransaction {
+    pub fn balance_sheet_account(&self) -> String {
+        format!("Assets:Starling:{}", &self.account_name)
+    }
 
-pub struct TransactionParameters {
-    pub date: DateTime<Utc>,
-    pub status: Status,
-    pub counter_party_name: String,
-    pub reference: String,
-    pub balance_sheet_account: String,
-    pub income_statement_account: String,
-    pub amount: Decimal,
-    pub currency: String,
-}
-
-/// Beancount `Transactions` directive
-pub fn transaction(params: TransactionParameters) -> String {
-    format!(
-        "{date} {status} {counter_party_name} {reference}\n  {balance_sheet_account:<50} {amount:>10}\n{income_statement_account:<50} {negative_amount:>10}",
-        date = fmt_date(&params.date),
-        status = fmt_status(&params.status),
-        counter_party_name = fmt_counterparty_name(&params.counter_party_name),
-        reference = fmt_reference(&params.reference),
-        balance_sheet_account = params.balance_sheet_account,
-        income_statement_account = params.income_statement_account,
-        amount = fmt_amount_with_currency(&params.amount, &params.currency, true),
-        negative_amount =fmt_amount_with_currency(&params.amount, &params.currency, false)
-    )
-}
-
-fn fmt_amount_with_currency(amount: &Decimal, currency: &String, make_negative: bool) -> String {
-    match make_negative {
-        false => format!("{} {}", amount.to_string(), currency),
-        true => format!("{} {}", (Decimal::ZERO - amount).to_string(), currency),
+    pub fn income_statement_account(&self) -> String {
+        format!("{}", &self.spending_category.as_ref().to_case(Case::Pascal))
     }
 }
 
-pub fn transactions(account: &Account, transaction: &Transaction) -> String {
-    format!(
-        "{date} {status} {counter_party_name} \"{reference}\"\n  {balance_sheet_account:<25} {amount:>15} {user_note}\n  {income_statement_account}",
-        date = fmt_date(&transaction.settlement_time),
-        status = fmt_status(&transaction.status),
-        counter_party_name = fmt_counterparty_name(&transaction.counter_party_name),
-        reference = fmt_reference(transaction.reference.as_deref().unwrap_or_default()),
-        balance_sheet_account = fmt_balance_sheet_account(&account.name),
-        income_statement_account = fmt_income_statement_account(&transaction.spending_category, &transaction.direction),
-        amount = fmt_amount(&transaction),
-        user_note = fmt_user_note(&transaction.user_note.as_deref().unwrap_or_default()),
-    )
+impl fmt::Display for BeanTransaction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let date = fmt_date(&self.date);
+        let status = fmt_status(&self.status);
+        let counter_party_name = fmt_counterparty_name(&self.counter_party_name);
+        let reference = fmt_reference(&self.reference);
+        let note = fmt_note(&self.note);
+        let amount = fmt_amount(&self.amount, false);
+        let amount_reversed = fmt_amount(&self.amount, true);
+
+        let line1 = format!(
+            "{} {} {} {} {}",
+            date, status, counter_party_name, reference, note
+        );
+        let line2 = format!(
+            "  {:<40} {:>10} {}",
+            &self.balance_sheet_account(),
+            amount,
+            &self.currency
+        );
+        let line3 = format!(
+            "  {:<40} {:>10} {}",
+            &self.income_statement_account(),
+            amount_reversed,
+            &self.currency
+        );
+
+        write!(f, "{}\n{}\n{}", line1, line2, line3)
+    }
 }
 
-fn fmt_date(time: &DateTime<Utc>) -> DelayedFormat<StrftimeItems> {
-    time.format("%Y-%m-%d")
+fn fmt_date(date: &DateTime<Utc>) -> String {
+    date.format("%Y-%m-%d").to_string()
 }
 
 fn fmt_status(status: &Status) -> &str {
@@ -79,71 +68,107 @@ fn fmt_reference(reference: &str) -> String {
     format!("\"{}\"", clean_string.to_string())
 }
 
-fn fmt_balance_sheet_account(account_name: &String) -> String {
-    format!("Assets:Starling:{}", account_name)
-}
-
-fn fmt_income_statement_account(
-    spending_category: &SpendingCategory,
-    direction: &Direction,
-) -> String {
-    let direction = match direction {
-        Direction::In => "Income",
-        Direction::Out => "Expenses",
-    };
-
-    let category = spending_category.as_ref();
-    format!("{}:{}", direction, category.to_case(Case::Pascal))
-}
-
-fn fmt_amount(transaction: &Transaction) -> String {
-    format!(
-        "{} {}",
-        transaction.to_decimal().to_string(),
-        transaction.amount.currency
-    )
-}
-
-fn fmt_user_note(user_note: &str) -> String {
-    match user_note.is_empty() {
+fn fmt_note(note: &str) -> String {
+    match note.is_empty() {
         true => String::new(),
-        false => format!("; {}", user_note),
+        false => format!("; {}", note),
+    }
+}
+
+// fn fmt_balance_sheet_account(account_name: &String) -> String {
+//     format!("Assets:Starling:{}", account_name)
+// }
+
+// fn fmt_income_statement_account(
+//     spending_category: &SpendingCategory,
+//     direction: &Direction,
+// ) -> String {
+//     let direction = match direction {
+//         Direction::In => "Income",
+//         Direction::Out => "Expenses",
+//     };
+
+//     let category = spending_category.as_ref();
+//     format!("{}:{}", direction, category.to_case(Case::Pascal))
+// }
+
+fn fmt_amount(amount: &Decimal, reverse: bool) -> String {
+    match reverse {
+        false => format!("{}", amount.to_string()),
+        true => format!("{}", (Decimal::ZERO - amount).to_string()),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::starling::schemas::transactions::Status;
-    use chrono::{DateTime, TimeZone};
+    use super::BeanTransaction;
+    use crate::starling::schemas::transactions::{Direction, SpendingCategory, Status};
     use rust_decimal::Decimal;
 
-    use super::transaction;
+    #[test]
+    fn it_constructs_balance_sheet_account() {
+        let tx = BeanTransaction {
+            // ALEX How to get a date from YY/MM/DD ?
+            date: chrono::Utc::now(),
+            status: Status::Settled,
+            account_name: String::from("Personal"),
+            counter_party_name: String::from("Tesco"),
+            reference: String::from("TESCO-STORES 6557 EDINBURGH GBR"),
+            note: String::from("A note"),
+            spending_category: SpendingCategory::Admin,
+            balance_sheet_account: String::from("Assets:Starling:Business"),
+            income_statement_account: String::from("Expenses:BillsAndServices"),
+            amount: Decimal::new(12345, 2),
+            direction: Direction::Out,
+            currency: String::from("GBP"),
+        };
+
+        let expected = "Assets:Starling:Personal";
+        assert_eq!(expected, tx.balance_sheet_account());
+    }
 
     #[test]
-    fn it_formats_transaction() {
-        let date = chrono::Utc::now();
-        let status = Status::Settled;
-        let counter_party_name = String::from("Tesco");
-        let reference = String::from("TESCO-STORES 6557 EDINBURGH GBR");
-        let balance_sheet_account = String::from("Assets:Starling:Business");
-        let income_statement_account = String::from("Expenses:BillsAndServices");
-        let amount = Decimal::new(12345, 2);
-        let currency = String::from("GBP");
+    fn it_constructs_income_statement_account() {
+        let tx = BeanTransaction {
+            // ALEX How to get a date from YY/MM/DD ?
+            date: chrono::Utc::now(),
+            status: Status::Settled,
+            account_name: String::from("Personal"),
+            counter_party_name: String::from("Tesco"),
+            reference: String::from("TESCO-STORES 6557 EDINBURGH GBR"),
+            note: String::from("A note"),
+            spending_category: SpendingCategory::Admin,
+            balance_sheet_account: String::from("Assets:Starling:Business"),
+            income_statement_account: String::from("Expenses:BillsAndServices"),
+            amount: Decimal::new(12345, 2),
+            direction: Direction::Out,
+            currency: String::from("GBP"),
+        };
 
-        let result = transaction(
-            date,
-            status,
-            &counter_party_name,
-            &reference,
-            &balance_sheet_account,
-            &income_statement_account,
-            amount,
-            &currency,
-        );
+        let expected = "Admin";
+        assert_eq!(expected, tx.income_statement_account());
+    }
 
-        assert_eq!(
-            "2022-11-16 * \"Tesco\" \"TESCO-STORES 6557 EDINBURGH GBR\"\n  Assets:Starling:Business                           -123.45 GBP\nExpenses:BillsAndServices                          123.45 GBP", result,
-            "Responses should be equal"
-        );
+    #[test]
+    fn it_displays_transactions() {
+        let tx = BeanTransaction {
+            // ALEX How to get a date from YY/MM/DD ?
+            date: chrono::Utc::now(),
+            status: Status::Settled,
+            account_name: String::from("Personal"),
+            counter_party_name: String::from("Tesco"),
+            reference: String::from("TESCO-STORES 6557 EDINBURGH GBR"),
+            note: String::from("A note"),
+            spending_category: SpendingCategory::Admin,
+            balance_sheet_account: String::from("Assets:Starling:Business"),
+            income_statement_account: String::from("Expenses:BillsAndServices"),
+            amount: Decimal::new(12345, 2),
+            direction: Direction::Out,
+            currency: String::from("GBP"),
+        };
+
+        let expected = "2022-11-18 * \"Tesco\" \"TESCO-STORES 6557 EDINBURGH GBR\" ; A note\n  Assets:Starling:Personal                     123.45 GBP\n  Admin                                       -123.45 GBP";
+
+        assert_eq!(expected, tx.to_string());
     }
 }

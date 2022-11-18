@@ -12,16 +12,26 @@
 //! - tokio channels https://tokio.rs/tokio/tutorial/channels
 //! - tokio streams https://tokio.rs/tokio/tutorial/streams
 
+mod cli;
+
 use anyhow::Context;
 use budget::bean::directives::open::open as bean_open;
-use budget::bean::directives::transactions::transaction as bean_transaction;
-use budget::bean::directives::transactions::TransactionParameters;
+use budget::bean::BeanTransaction;
 use budget::starling::{
     client::Client as StarlingClient,
     schemas::{accounts::Account, transactions::Transaction},
 };
 use itertools::Itertools;
 use rust_decimal::Decimal;
+
+// fn main() {
+//     let cli = Cli::parse();
+
+//     // You can check the value provided by positional arguments, or option arguments
+//     if let Some(name) = cli.name.as_deref() {
+//         println!("Value for name: {}", name);
+//     }
+// }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -55,6 +65,7 @@ async fn main() -> anyhow::Result<()> {
         let accounts = client.accounts().await.context("failed to list accounts")?;
 
         for account in accounts {
+            // tracing::info!("Account: {:#?}", account);
             tracing::info!("fetching transactions for {}/{}", client.name, account.name);
             let transactions = client
                 .transactions(&account.account_uid, now - chrono::Duration::days(365), now)
@@ -64,6 +75,7 @@ async fn main() -> anyhow::Result<()> {
             transaction_total = Decimal::ZERO;
 
             for transaction in transactions {
+                // tracing::info!("Transaction: {:#?}", transaction);
                 transaction_total += transaction.to_decimal();
                 transaction_data.push(TransactionData {
                     account: account.clone(),
@@ -87,9 +99,10 @@ async fn main() -> anyhow::Result<()> {
         .iter()
         .sorted_by_key(|t| t.transaction.settlement_time)
         .for_each(|t| {
-            let params = TransactionParameters {
+            let tx = BeanTransaction {
                 date: t.transaction.settlement_time,
                 status: t.transaction.status.clone(),
+                account_name: t.account.name.clone(),
                 counter_party_name: t.transaction.counter_party_name.clone(),
                 reference: t
                     .transaction
@@ -97,14 +110,20 @@ async fn main() -> anyhow::Result<()> {
                     .as_deref()
                     .unwrap_or_default()
                     .to_string(),
+                note: t
+                    .transaction
+                    .user_note
+                    .as_deref()
+                    .unwrap_or_default()
+                    .to_string(),
+                spending_category: t.transaction.spending_category.clone(),
                 balance_sheet_account: String::from("TODO"),
                 income_statement_account: String::from("TODO"),
                 amount: t.transaction.to_decimal(),
+                direction: t.transaction.direction.clone(),
                 currency: t.account.currency.clone(),
             };
-            let entry = bean_transaction(params);
-
-            println!("{}", entry);
+            println!("{}", tx);
         });
 
     Ok(())

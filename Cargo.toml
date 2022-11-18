@@ -1,5 +1,6 @@
 [package]
 name = "budget"
+about = "An application for command line accounting"
 version = "0.1.0"
 edition = "2021"
 
@@ -26,6 +27,7 @@ convert_case = "0.6.0"
 itertools = "0.10.5"
 rust_decimal = "1.26.1"
 rust_decimal_macros = "1.26.1"
+clap = { version = "4.0.26", features = ["derive"] }
 
 [dev-dependencies]
 
