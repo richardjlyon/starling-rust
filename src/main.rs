@@ -17,10 +17,7 @@ mod cli;
 use anyhow::Context;
 use budget::bean::directives::open::open as bean_open;
 use budget::bean::BeanTransaction;
-use budget::starling::{
-    client::Client as StarlingClient,
-    schemas::{accounts::Account, transactions::Transaction},
-};
+use budget::starling::client::Client as StarlingClient;
 use itertools::Itertools;
 use rust_decimal::Decimal;
 
@@ -42,11 +39,6 @@ async fn main() -> anyhow::Result<()> {
     let business = StarlingClient::new("business");
     let now = chrono::Utc::now();
 
-    struct TransactionData {
-        account: Account,
-        transaction: Transaction,
-    }
-
     // let file = std::fs::File::create("starling.bean")?;
 
     // let stream = futures::stream::iter(&[personal, business]);
@@ -57,7 +49,7 @@ async fn main() -> anyhow::Result<()> {
     // collect into a vector
 
     // all transactions for personal and business
-    let mut transaction_data: Vec<TransactionData> = Vec::new();
+    let mut transaction_data: Vec<BeanTransaction> = Vec::new();
     let mut transaction_total: Decimal;
 
     // get all transactions for the specified period
@@ -67,20 +59,31 @@ async fn main() -> anyhow::Result<()> {
         for account in accounts {
             // tracing::info!("Account: {:#?}", account);
             tracing::info!("fetching transactions for {}/{}", client.name, account.name);
-            let transactions = client
+            let starling_transactions = client
                 .transactions(&account.account_uid, now - chrono::Duration::days(365), now)
                 .await
                 .context("when fetching transactions")?;
 
             transaction_total = Decimal::ZERO;
 
-            for transaction in transactions {
+            for tx in starling_transactions {
                 // tracing::info!("Transaction: {:#?}", transaction);
-                transaction_total += transaction.to_decimal();
-                transaction_data.push(TransactionData {
-                    account: account.clone(),
-                    transaction,
-                });
+                let bean_tx = BeanTransaction {
+                    date: tx.settlement_time,
+                    status: tx.status.clone(),
+                    account_name: account.name.clone(),
+                    counter_party_name: tx.counter_party_name.clone(),
+                    reference: tx.reference.as_deref().unwrap_or_default().to_string(),
+                    note: tx.user_note.as_deref().unwrap_or_default().to_string(),
+                    spending_category: tx.spending_category.clone(),
+                    balance_sheet_account: String::new(),
+                    income_statement_account: String::new(),
+                    amount: tx.to_decimal(),
+                    direction: tx.direction.clone(),
+                    currency: tx.amount.currency.clone(),
+                };
+                transaction_data.push(bean_tx);
+                transaction_total += tx.to_decimal();
             }
 
             tracing::info!(
@@ -94,36 +97,12 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    // sort by date and make bean entries
+    // sort by date and print
     transaction_data
         .iter()
-        .sorted_by_key(|t| t.transaction.settlement_time)
-        .for_each(|t| {
-            let tx = BeanTransaction {
-                date: t.transaction.settlement_time,
-                status: t.transaction.status.clone(),
-                account_name: t.account.name.clone(),
-                counter_party_name: t.transaction.counter_party_name.clone(),
-                reference: t
-                    .transaction
-                    .reference
-                    .as_deref()
-                    .unwrap_or_default()
-                    .to_string(),
-                note: t
-                    .transaction
-                    .user_note
-                    .as_deref()
-                    .unwrap_or_default()
-                    .to_string(),
-                spending_category: t.transaction.spending_category.clone(),
-                balance_sheet_account: String::from("TODO"),
-                income_statement_account: String::from("TODO"),
-                amount: t.transaction.to_decimal(),
-                direction: t.transaction.direction.clone(),
-                currency: t.account.currency.clone(),
-            };
-            println!("{}", tx);
+        .sorted_by_key(|tx| tx.date)
+        .for_each(|tx| {
+            println!("{}\n", tx);
         });
 
     Ok(())

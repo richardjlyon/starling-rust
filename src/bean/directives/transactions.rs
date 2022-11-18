@@ -1,5 +1,5 @@
 use crate::bean::BeanTransaction;
-use crate::starling::schemas::transactions::{Direction, Status};
+use crate::starling::schemas::transactions::{Direction, SpendingCategory, Status};
 use chrono::{DateTime, Utc};
 use convert_case::{Case, Casing};
 use regex::Regex;
@@ -7,12 +7,21 @@ use rust_decimal::Decimal;
 use std::fmt;
 
 impl BeanTransaction {
+    // construct a balance sheet account string
+    // e.g. "Assets:Starling:Business"
     pub fn balance_sheet_account(&self) -> String {
         format!("Assets:Starling:{}", &self.account_name)
     }
 
+    // construct an income statement account string
+    // e.g. "Expense:BusinessEntertainment"
     pub fn income_statement_account(&self) -> String {
-        format!("{}", &self.spending_category.as_ref().to_case(Case::Pascal))
+        let category_type = match SpendingCategory::is_income(&self.spending_category) {
+            true => "Income",
+            false => "Expenses",
+        };
+        let category = &self.spending_category.as_ref().to_case(Case::Pascal);
+        format!("{}:{}", category_type, category)
     }
 }
 

@@ -112,6 +112,15 @@ pub enum SpendingCategory {
     Dividends,
 }
 
+impl SpendingCategory {
+    pub fn is_income(&self) -> bool {
+        match self {
+            Self::Income | Self::OtherIncome => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Status {
@@ -221,3 +230,14 @@ impl Transaction {
 // rename
 // DESER = {key: ()} -> {alias: ()}
 // SER   = {alias: ()} -> {key: ()}
+
+#[cfg(test)]
+mod tests {
+    use super::SpendingCategory;
+
+    #[test]
+    fn it_flags_an_income_category() {
+        assert!(SpendingCategory::is_income(&SpendingCategory::Income));
+        assert!(!SpendingCategory::is_income(&SpendingCategory::Admin));
+    }
+}
