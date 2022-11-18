@@ -3,32 +3,24 @@
 //!
 
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+pub mod commands;
 
+/// Simple program to greet a person
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
 pub struct Cli {
-    /// Optional name to operate on
-    pub name: Option<String>,
-
-    /// Sets a custom config file
-    #[arg(short, long, value_name = "FILE")]
-    config: Option<PathBuf>,
-
-    /// Turn debugging information on
-    #[arg(short, long, action = clap::ArgAction::Count)]
-    debug: u8,
-
     #[command(subcommand)]
-    command: Option<Commands>,
+    pub command: Commands,
 }
 
 #[derive(Subcommand)]
-enum Commands {
-    /// initialise a beancount file
+pub enum Commands {
+    /// Initialises a beancount file
     Init {
-        /// lists test values
-        #[arg(short, long)]
-        list: bool,
+        /// Start date (YYYY-MM-DD)
+        start_date: Option<String>,
+        /// End date (YYYY-MM-DD)
+        end_date: Option<String>,
     },
 }
