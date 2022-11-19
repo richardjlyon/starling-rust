@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -43,10 +44,16 @@ pub struct SignedCurrencyAndAmount {
     pub minor_units: i64,
 }
 
+impl SignedCurrencyAndAmount {
+    pub fn to_decimal(&self) -> Decimal {
+        Decimal::new(self.minor_units, 2)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Balance {
-    cleared_balance: SignedCurrencyAndAmount,
+    pub cleared_balance: SignedCurrencyAndAmount,
     effective_balance: SignedCurrencyAndAmount,
     pending_transactions: SignedCurrencyAndAmount,
 }

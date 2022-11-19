@@ -112,12 +112,12 @@ fn fmt_amount(amount: &Decimal, reverse: bool) -> String {
 mod tests {
     use super::BeanTransaction;
     use crate::starling::schemas::transactions::{Direction, SpendingCategory, Status};
+    use chrono::prelude::*;
     use rust_decimal::Decimal;
 
     #[test]
     fn it_constructs_balance_sheet_account() {
         let tx = BeanTransaction {
-            // ALEX How to get a date from YY/MM/DD ?
             date: chrono::Utc::now(),
             status: Status::Settled,
             account_name: String::from("Personal"),
@@ -139,7 +139,6 @@ mod tests {
     #[test]
     fn it_constructs_income_statement_account() {
         let tx = BeanTransaction {
-            // ALEX How to get a date from YY/MM/DD ?
             date: chrono::Utc::now(),
             status: Status::Settled,
             account_name: String::from("Personal"),
@@ -154,7 +153,7 @@ mod tests {
             currency: String::from("GBP"),
         };
 
-        let expected = "Admin";
+        let expected = "Expenses:Admin";
         assert_eq!(expected, tx.income_statement_account());
     }
 
@@ -162,7 +161,7 @@ mod tests {
     fn it_displays_transactions() {
         let tx = BeanTransaction {
             // ALEX How to get a date from YY/MM/DD ?
-            date: chrono::Utc::now(),
+            date: Utc.with_ymd_and_hms(2022, 11, 18, 9, 10, 11).unwrap(),
             status: Status::Settled,
             account_name: String::from("Personal"),
             counter_party_name: String::from("Tesco"),
@@ -176,7 +175,7 @@ mod tests {
             currency: String::from("GBP"),
         };
 
-        let expected = "2022-11-18 * \"Tesco\" \"TESCO-STORES 6557 EDINBURGH GBR\" ; A note\n  Assets:Starling:Personal                     123.45 GBP\n  Admin                                       -123.45 GBP";
+        let expected = "2022-11-18 * \"Tesco\" \"TESCO-STORES 6557 EDINBURGH GBR\" ; A note\n  Assets:Starling:Personal                     123.45 GBP\n  Expenses:Admin                              -123.45 GBP";
 
         assert_eq!(expected, tx.to_string());
     }

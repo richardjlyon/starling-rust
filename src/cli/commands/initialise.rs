@@ -4,12 +4,14 @@
 //! time period, or the last 7 days
 
 use anyhow::Context;
-use budget::bean::directives::open::open as bean_open;
-use budget::bean::BeanTransaction;
-use budget::starling::client::Client as StarlingClient;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use rust_decimal::Decimal;
+use std::io::Write;
+
+use budget::bean::directives::open::open as bean_open;
+use budget::bean::BeanTransaction;
+use budget::starling::client::Client as StarlingClient;
 
 const DEFAULT_DAYS: i64 = 7;
 
@@ -24,20 +26,17 @@ pub async fn initialise(
 ) -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
-    let date_range: DateRange = parse_dates(start_date, end_date);
-
-    tracing::info!(
-        "start date: {}, end date: {}",
-        date_range.start,
-        date_range.end
-    );
-
     let personal = StarlingClient::new("personal");
     let business = StarlingClient::new("business");
-
-    // all transactions for personal and business
+    let date_range: DateRange = parse_dates(start_date, end_date);
     let mut transaction_data: Vec<BeanTransaction> = Vec::new();
     let mut transaction_total: Decimal;
+
+    //  for each account,
+    //      get starling transactions
+    //      compute and write opening entry
+    // write transactions in date order
+    // for each account, write current balance
 
     // get all transactions for the specified period
     for client in &[personal, business] {
@@ -45,7 +44,16 @@ pub async fn initialise(
 
         for account in accounts {
             // tracing::info!("Account: {:#?}", account);
+
+            let balance = client
+                .balance(&account.account_uid)
+                .await?
+                .cleared_balance
+                .to_decimal();
+            tracing::info!("balance for {}: {}", client.name, balance);
+
             tracing::info!("fetching transactions for {}/{}", client.name, account.name);
+
             let starling_transactions = client
                 .transactions(&account.account_uid, date_range.start, date_range.end)
                 .await
@@ -74,22 +82,26 @@ pub async fn initialise(
             }
 
             tracing::info!(
-                "Total for account `{}` = {}",
+                "total for account `{}` = {}",
                 account.name,
                 transaction_total
             );
 
-            let open_entry = bean_open(&date_range.start, &account, &String::from("GBP"));
-            tracing::info!("Open statement: {}", open_entry);
+            // let open_entry = bean_open(&date_range.start, &account, &String::from("GBP"));
+            // tracing::info!("open statement: {}", open_entry);
         }
     }
+
+    // write to file
+
+    let mut file = std::fs::File::create("starling.bean")?;
 
     // sort by date and print
     transaction_data
         .iter()
         .sorted_by_key(|tx| tx.date)
         .for_each(|tx| {
-            println!("{}\n", tx);
+            write!(file, "{}\n\n", tx.to_string());
         });
 
     Ok(())
