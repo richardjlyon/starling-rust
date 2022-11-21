@@ -26,14 +26,20 @@ struct DatedAmount {
 }
 struct BalanceData {
     open: DatedAmount,
-    now: DatedAmount,
+    now:DatedAmount,
 }
 
-// Holds data for 
-struct AccountData {
+// Holds transaction and balance data for a single client. 
+struct TransactionData {
     client: StarlingClient,
-    transactions: Vec<BeanTransaction>,
-    balance_data: BalanceData,
+    transactions: Option<Vec<BeanTransaction>>,
+    balance_data: Option<BalanceData>,
+}
+
+impl TransactionData {
+    fn new(client: StarlingClient) -> TransactionData {
+        TransactionData { client: client, transactions: None, balance_data: None }
+    }
 }
 
 pub async fn initialise(
@@ -43,15 +49,15 @@ pub async fn initialise(
     tracing_subscriber::fmt::init();
 
     let date_range: DateRange = parse_dates(start_date, end_date);
-    let mut transaction_data: Vec<BeanTransaction> = Vec::new();
-    let mut transaction_total: Decimal;
 
     let personal = StarlingClient::new("personal");
     let business = StarlingClient::new("business");
 
     for client in &[personal, business] {
         //  for each account, get starling transactions
-        get_transactions(&client, &mut transaction_data, &date_range).await?;
+        let transaction_data = TransactionData::new(client);
+        
+        get_transaction_data(&client, &mut transaction_data, &date_range).await?;
     }
 
     //      compute and write opening entry
@@ -127,29 +133,6 @@ pub async fn initialise(
     Ok(())
 }
 
-fn parse_dates(start_date: &Option<String>, end_date: &Option<String>) -> DateRange {
-    let end_date = match end_date {
-        Some(date) => parse_date(date),
-        None => chrono::Utc::now(),
-    };
-
-    let start_date = match start_date {
-        Some(date) => parse_date(date),
-        None => end_date - chrono::Duration::days(DEFAULT_DAYS),
-    };
-
-    DateRange {
-        start: start_date,
-        end: end_date,
-    }
-}
-
-fn parse_date(date: &str) -> DateTime<Utc> {
-    DateTime::parse_from_str(date, "%Y-%m-%d")
-        .unwrap()
-        .with_timezone(&Utc)
-}
-
 // Get transactions from Starling for the given range of dates
 //
 // We retrieve the transactions, and the current balance. From this, we compute
@@ -197,3 +180,28 @@ async fn get_transactions(
 
     Ok(())
 }
+
+fn parse_dates(start_date: &Option<String>, end_date: &Option<String>) -> DateRange {
+    let end_date = match end_date {
+        Some(date) => parse_date(date),
+        None => chrono::Utc::now(),
+    };
+
+    let start_date = match start_date {
+        Some(date) => parse_date(date),
+        None => end_date - chrono::Duration::days(DEFAULT_DAYS),
+    };
+
+    DateRange {
+        start: start_date,
+        end: end_date,
+    }
+}
+
+fn parse_date(date: &str) -> DateTime<Utc> {
+    DateTime::parse_from_str(date, "%Y-%m-%d")
+        .unwrap()
+        .with_timezone(&Utc)
+}
+
+
