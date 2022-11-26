@@ -54,10 +54,16 @@ impl Client {
     }
 
     // endpoint /accounts
-    pub async fn accounts(&self) -> Result<Vec<Account>, AppError> {
+    pub async fn account(&self) -> Result<Account, AppError> {
         self.get("accounts", &())
             .await
             .map(|d: AccountResponse| d.accounts)
+            .map(|d| {
+                d.into_iter()
+                    .filter(|a| a.currency == "GBP")
+                    .next()
+                    .expect("one GBP account")
+            })
     }
 
     // endpoint /accounts/account_uid/balancd

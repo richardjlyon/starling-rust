@@ -213,7 +213,7 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    pub fn to_decimal(&self) -> Decimal {
+    pub fn as_decimal(&self) -> Decimal {
         // FIXME implement currency decimal functionality
         const DEC: u32 = 2;
         match self.direction {

@@ -9,7 +9,6 @@ use itertools::Itertools;
 use rust_decimal::Decimal;
 use std::io::Write;
 
-use budget::bean::directives::open::open as bean_open;
 use budget::bean::BeanTransaction;
 use budget::starling::client::Client as StarlingClient;
 
@@ -27,130 +26,45 @@ struct DatedAmount {
 #[derive(Debug)]
 struct BalanceData {
     open: DatedAmount,
-    now:DatedAmount,
+    now: DatedAmount,
 }
 
-// Holds transaction and balance data for a single client. 
+// Holds transaction and balance data for a single client.
 #[derive(Debug)]
 struct TransactionData {
-    client: StarlingClient,
-    transactions: Option<Vec<BeanTransaction>>,
-    balance_data: Option<BalanceData>,
+    transactions: Vec<BeanTransaction>,
+    balance_data: BalanceData,
 }
 
 impl TransactionData {
-    fn new(client: StarlingClient) -> TransactionData {
-        TransactionData { client: client, transactions: None, balance_data: None }
-    }
-}
+    async fn get(
+        client: &StarlingClient,
+        date_range: &DateRange,
+    ) -> anyhow::Result<TransactionData> {
+        let account = client.account().await.context("failed to list accounts")?;
 
-pub async fn initialise(
-    start_date: &Option<String>,
-    end_date: &Option<String>,
-) -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
-
-    let date_range: DateRange = parse_dates(start_date, end_date);
-
-    let personal = StarlingClient::new("personal");
-    let business = StarlingClient::new("business");
-
-    for client in &[personal, business] {
-        //  for each account, get starling transactions
-        let transaction_data = TransactionData::new(client);
-        
-        get_transaction_data(&client, &mut transaction_data, &date_range).await?;
-    }
-
-    //      compute and write opening entry
-    // write transactions in date order
-    // for each account, write current balance
-
-    // get all transactions for the specified period
-    // for client in &[personal, business] {
-    //     let accounts = client.accounts().await.context("failed to list accounts")?;
-
-    //     for account in accounts {
-    //         // tracing::info!("Account: {:#?}", account);
-
-    //         let balance = client
-    //             .balance(&account.account_uid)
-    //             .await?
-    //             .cleared_balance
-    //             .to_decimal();
-    //         tracing::info!("balance for {}: {}", client.name, balance);
-
-    //         tracing::info!("fetching transactions for {}/{}", client.name, account.name);
-
-    //         let starling_transactions = client
-    //             .transactions(&account.account_uid, date_range.start, date_range.end)
-    //             .await
-    //             .context("when fetching transactions")?;
-
-    //         transaction_total = Decimal::ZERO;
-
-    //         for tx in starling_transactions {
-    //             // tracing::info!("Transaction: {:#?}", transaction);
-    //             let bean_tx = BeanTransaction {
-    //                 date: tx.settlement_time,
-    //                 status: tx.status.clone(),
-    //                 account_name: account.name.clone(),
-    //                 counter_party_name: tx.counter_party_name.clone(),
-    //                 reference: tx.reference.as_deref().unwrap_or_default().to_string(),
-    //                 note: tx.user_note.as_deref().unwrap_or_default().to_string(),
-    //                 spending_category: tx.spending_category.clone(),
-    //                 balance_sheet_account: String::new(),
-    //                 income_statement_account: String::new(),
-    //                 amount: tx.to_decimal(),
-    //                 direction: tx.direction.clone(),
-    //                 currency: tx.amount.currency.clone(),
-    //             };
-    //             transaction_data.push(bean_tx);
-    //             transaction_total += tx.to_decimal();
-    //         }
-
-    //         tracing::info!(
-    //             "total for account `{}` = {}",
-    //             account.name,
-    //             transaction_total
-    //         );
-
-    //         // let open_entry = bean_open(&date_range.start, &account, &String::from("GBP"));
-    //         // tracing::info!("open statement: {}", open_entry);
-    //     }
-    // }
-
-    // write to file
-
-    let mut file = std::fs::File::create("starling.bean")?;
-
-    // sort by date and print
-    transaction_data
-        .iter()
-        .sorted_by_key(|tx| tx.date)
-        .for_each(|tx| {
-            write!(file, "{}\n\n", tx.to_string());
-        });
-
-    Ok(())
-}
-
-// Get transactions from Starling for the given range of dates
-//
-// We retrieve the transactions, and the current balance. From this, we compute
-// what the opening position was, and return the balance and opening positions.
-//
-async fn get_transactions(
-    client: &StarlingClient,
-    data: &mut Vec<BeanTransaction>,
-    date_range: &DateRange,
-) -> anyhow::Result<(BalanceData, anyhow::Error)> {
-    //
-    let accounts = client.accounts().await.context("failed to list accounts")?;
-
-    for account in accounts {
         tracing::info!("fetching transactions for {}/{}", client.name, account.name);
 
+        let mut transactions = vec![];
+
+        let balance = client
+            .balance(&account.account_uid)
+            .await
+            .context("when fetching balance")?;
+
+        // todo(rjlyon): fix
+        let now = DatedAmount {
+            date: date_range.end,
+            amount: balance.cleared_balance.to_decimal(),
+        };
+
+        let mut open = DatedAmount {
+            date: date_range.start,
+            amount: balance.cleared_balance.to_decimal(), // not a huge fan of decimal
+                                                          // you can impl add on SignedCurrencyAmount
+        };
+
+        // fetch the transactions for the specified period
         let starling_transactions = client
             .transactions(&account.account_uid, date_range.start, date_range.end)
             .await
@@ -158,26 +72,58 @@ async fn get_transactions(
 
         for tx in starling_transactions {
             // tracing::info!("Transaction: {:#?}", transaction);
+            let amount = tx.as_decimal();
+            open.amount -= amount;
+
             let bean_tx = BeanTransaction {
                 date: tx.settlement_time,
-                status: tx.status.clone(),
+                status: tx.status,
                 account_name: account.name.clone(),
-                counter_party_name: tx.counter_party_name.clone(),
-                reference: tx.reference.as_deref().unwrap_or_default().to_string(),
-                note: tx.user_note.as_deref().unwrap_or_default().to_string(),
-                spending_category: tx.spending_category.clone(),
-                balance_sheet_account: String::new(),
-                income_statement_account: String::new(),
-                amount: tx.to_decimal(),
-                direction: tx.direction.clone(),
-                currency: tx.amount.currency.clone(),
+                counter_party_name: tx.counter_party_name,
+                reference: tx.reference.as_deref().unwrap_or_default().to_string(), // suspicious
+                note: tx.user_note.as_deref().unwrap_or_default().to_string(),      // suspicious
+                spending_category: tx.spending_category,
+                balance_sheet_account: String::new(), // suspicious
+                income_statement_account: String::new(), // suspicious
+                amount,
+                direction: tx.direction,
+                currency: tx.amount.currency,
             };
-            data.push(bean_tx);
+            transactions.push(bean_tx);
         }
-    }
 
-    let balance_data = BalanceData{
-        open: DatedAmount {}
+        Ok(TransactionData {
+            transactions,
+            balance_data: BalanceData { open, now },
+        })
+    }
+}
+
+///
+pub async fn initialise(
+    start_date: &Option<String>,
+    end_date: &Option<String>,
+) -> anyhow::Result<()> {
+    let date_range: DateRange = parse_dates(start_date, end_date);
+
+    let personal = StarlingClient::new("personal");
+    let business = StarlingClient::new("business");
+
+    for client in &[personal, business] {
+        //  for each account, get starling transactions
+        let transaction_data = TransactionData::get(client, &date_range).await?;
+        println!("{:?}", transaction_data.balance_data);
+
+        let mut file = std::fs::File::create("starling.bean")?;
+
+        // sort by date and print
+        transaction_data
+            .transactions
+            .iter()
+            .sorted_by_key(|tx| tx.date)
+            .for_each(|tx| {
+                write!(file, "{}\n\n", tx.to_string());
+            });
     }
 
     Ok(())
@@ -205,5 +151,3 @@ fn parse_date(date: &str) -> DateTime<Utc> {
         .unwrap()
         .with_timezone(&Utc)
 }
-
-
