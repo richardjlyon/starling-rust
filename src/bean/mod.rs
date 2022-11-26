@@ -14,7 +14,7 @@ pub enum AccountTypes {
     Income,
     Expenses,
 }
-
+#[derive(Debug)]
 pub struct BeanTransaction {
     pub date: DateTime<Utc>,
     pub status: Status,

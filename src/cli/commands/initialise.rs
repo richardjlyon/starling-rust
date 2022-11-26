@@ -19,17 +19,19 @@ struct DateRange {
     start: DateTime<Utc>,
     end: DateTime<Utc>,
 }
-
+#[derive(Debug)]
 struct DatedAmount {
     date: DateTime<Utc>,
     amount: Decimal,
 }
+#[derive(Debug)]
 struct BalanceData {
     open: DatedAmount,
     now:DatedAmount,
 }
 
 // Holds transaction and balance data for a single client. 
+#[derive(Debug)]
 struct TransactionData {
     client: StarlingClient,
     transactions: Option<Vec<BeanTransaction>>,

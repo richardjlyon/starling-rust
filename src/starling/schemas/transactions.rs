@@ -24,7 +24,7 @@ pub enum CounterpartyType {
     Loan,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, strum::AsRefStr)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, strum::AsRefStr)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum SpendingCategory {
     Bike,
