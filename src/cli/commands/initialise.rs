@@ -26,7 +26,7 @@ struct DatedAmount {
 #[derive(Debug)]
 struct BalanceData {
     open: DatedAmount,
-    now: DatedAmount,
+    close: DatedAmount,
 }
 
 // Holds transaction and balance data for a single client.
@@ -41,35 +41,42 @@ impl TransactionData {
         client: &StarlingClient,
         date_range: &DateRange,
     ) -> anyhow::Result<TransactionData> {
+        //  
         let account = client.account().await.context("failed to list accounts")?;
-
         tracing::info!("fetching transactions for {}/{}", client.name, account.name);
-
-        let mut transactions = vec![];
-
+        
+        // get account balances
+        
         let balance = client
-            .balance(&account.account_uid)
-            .await
-            .context("when fetching balance")?;
+        .balance(&account.account_uid)
+        .await
+        .context("when fetching balance")?;
+        
+        // fetch the transactions for the specified period
 
-        // todo(rjlyon): fix
-        let now = DatedAmount {
+        let starling_transactions = client
+        .transactions(&account.account_uid, date_range.start, date_range.end)
+        .await
+        .context("when fetching transactions")?;
+        
+        // compute open balance todo(rjlyon): fix
+
+        let close = DatedAmount {
             date: date_range.end,
             amount: balance.cleared_balance.to_decimal(),
         };
+        
+        // compute close balance
 
         let mut open = DatedAmount {
             date: date_range.start,
             amount: balance.cleared_balance.to_decimal(), // not a huge fan of decimal
-                                                          // you can impl add on SignedCurrencyAmount
+            // you can impl add on SignedCurrencyAmount
         };
+        
+        // construct the tranaction objects
 
-        // fetch the transactions for the specified period
-        let starling_transactions = client
-            .transactions(&account.account_uid, date_range.start, date_range.end)
-            .await
-            .context("when fetching transactions")?;
-
+        let mut transactions = vec![];
         for tx in starling_transactions {
             // tracing::info!("Transaction: {:#?}", transaction);
             let amount = tx.as_decimal();
@@ -94,18 +101,18 @@ impl TransactionData {
 
         Ok(TransactionData {
             transactions,
-            balance_data: BalanceData { open, now },
+            balance_data: BalanceData { open, close },
         })
     }
 }
 
-///
+/// generate a new .beancount file for the given date range
 pub async fn initialise(
     start_date: &Option<String>,
     end_date: &Option<String>,
 ) -> anyhow::Result<()> {
+    //
     let date_range: DateRange = parse_dates(start_date, end_date);
-
     let personal = StarlingClient::new("personal");
     let business = StarlingClient::new("business");
 
@@ -114,9 +121,8 @@ pub async fn initialise(
         let transaction_data = TransactionData::get(client, &date_range).await?;
         println!("{:?}", transaction_data.balance_data);
 
-        let mut file = std::fs::File::create("starling.bean")?;
-
         // sort by date and print
+        let mut file = std::fs::File::create("starling.bean")?;
         transaction_data
             .transactions
             .iter()
