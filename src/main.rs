@@ -27,8 +27,7 @@ async fn main() -> anyhow::Result<()> {
     match &cli.command {
         Commands::Init {
             start_date,
-            end_date,
-        } => initialise(start_date, end_date).await?,
+        } => initialise(start_date).await?,
     }
 
     Ok(())

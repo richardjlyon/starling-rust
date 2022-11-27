@@ -46,7 +46,7 @@ impl TransactionData {
         tracing::info!("fetching transactions for {}/{}", client.name, account.name);
         
         // get account balances
-        
+
         let balance = client
         .balance(&account.account_uid)
         .await
@@ -109,10 +109,9 @@ impl TransactionData {
 /// generate a new .beancount file for the given date range
 pub async fn initialise(
     start_date: &Option<String>,
-    end_date: &Option<String>,
 ) -> anyhow::Result<()> {
     //
-    let date_range: DateRange = parse_dates(start_date, end_date);
+    let date_range: DateRange = parse_dates(start_date);
     let personal = StarlingClient::new("personal");
     let business = StarlingClient::new("business");
 
@@ -135,11 +134,8 @@ pub async fn initialise(
     Ok(())
 }
 
-fn parse_dates(start_date: &Option<String>, end_date: &Option<String>) -> DateRange {
-    let end_date = match end_date {
-        Some(date) => parse_date(date),
-        None => chrono::Utc::now(),
-    };
+fn parse_dates(start_date: &Option<String>) -> DateRange {
+    let end_date = chrono::Utc::now();
 
     let start_date = match start_date {
         Some(date) => parse_date(date),

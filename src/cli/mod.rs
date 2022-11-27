@@ -20,7 +20,5 @@ pub enum Commands {
     Init {
         /// Start date (YYYY-MM-DD)
         start_date: Option<String>,
-        /// End date (YYYY-MM-DD)
-        end_date: Option<String>,
     },
 }
