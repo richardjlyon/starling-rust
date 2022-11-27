@@ -53,14 +53,14 @@ impl Client {
         }
     }
 
-    // endpoint /accounts
-    pub async fn account(&self) -> Result<Account, AppError> {
+    // get an account for the specified currency
+    pub async fn currency_account(&self, currency: &str) -> Result<Account, AppError> {
         self.get("accounts", &())
             .await
             .map(|d: AccountResponse| d.accounts)
             .map(|d| {
                 d.into_iter()
-                    .filter(|a| a.currency == "GBP")
+                    .filter(|a| a.currency == currency)
                     .next()
                     .expect("one GBP account")
             })

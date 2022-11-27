@@ -42,7 +42,7 @@ impl TransactionData {
         date_range: &DateRange,
     ) -> anyhow::Result<TransactionData> {
         //  
-        let account = client.account().await.context("failed to list accounts")?;
+        let account = client.currency_account("GBP").await.context("failed to list accounts")?;
         tracing::info!("fetching transactions for {}/{}", client.name, account.name);
         
         // get account balances
