@@ -47,9 +47,25 @@ pub async fn initialise(start_date: &Option<String>) -> anyhow::Result<()> {
 fn parse_date(date: &Option<String>) -> DateTime<Utc> {
     const DEFAULT_DAYS: i64 = 7;
     match date {
-        Some(date) => DateTime::parse_from_str(date, "%Y-%m-%d")
-            .unwrap()
-            .with_timezone(&Utc),
+        Some(date) => {
+            let mut date_tz = date.clone();
+            date_tz.push_str(" 00:00:00 +00:00");
+            DateTime::parse_from_str(&date_tz, "%Y-%m-%d %H:%M:%S %z")
+            .unwrap().with_timezone(&Utc)
+        },
         None => chrono::Utc::now() - chrono::Duration::days(DEFAULT_DAYS),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses_dates() {
+        let expected = DateTime::parse_from_rfc3339("2022-11-29T00:00:00Z").unwrap();
+        let date_string = Some(String::from("2022-11-29"));
+
+        assert_eq!(expected, parse_date(&date_string));
     }
 }

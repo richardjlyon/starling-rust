@@ -6,6 +6,8 @@ pub mod account;
 pub mod balance;
 pub mod transaction;
 
+// ALEX any way to reduce path lenth for imports like Python __init__ ?
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SignedCurrencyAndAmount {

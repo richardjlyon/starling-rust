@@ -8,9 +8,8 @@ use rust_decimal::Decimal;
 
 use crate::starling::schemas::account::Account as StarlingAccount;
 use crate::starling::schemas::balance::Balance as StarlingBalance;
-use crate::starling::schemas::transaction::Transaction as StarlingTransaction;
+use crate::starling::schemas::transaction::{Transaction as StarlingTransaction, Direction};
 use crate::starling::schemas::transaction::{SpendingCategory, Status};
-use crate::starling::schemas::SignedCurrencyAndAmount;
 
 use convert_case::{Case, Casing};
 use std::fs;
@@ -143,8 +142,7 @@ impl Bean {
             let reference = fmt_reference(&tx.transaction.reference);
             let note = fmt_note(&tx.transaction.user_note);
             // TODO fix the `anount reversed` formatting implementation logic
-            let amount = fmt_amount(&tx.transaction.amount, false);
-            let amount_reversed = fmt_amount(&tx.transaction.amount, true);
+            let amount = fmt_amount(&tx.transaction);
 
             let line1 = format!(
                 "{} {} {} {} {}",
@@ -161,7 +159,7 @@ impl Bean {
             let line3 = format!(
                 "  {:<40} {:>10} {}",
                 fmt_income_statement_account(&tx.transaction),
-                amount_reversed,
+                -amount,
                 &tx.transaction.amount.currency
             );
 
@@ -243,9 +241,9 @@ pub fn fmt_income_statement_account(tx: &StarlingTransaction) -> String {
     format!("{}:{}", category_type, category)
 }
 
-fn fmt_amount(amount: &SignedCurrencyAndAmount, reverse: bool) -> String {
-    match reverse {
-        false => format!("{}", amount.as_decimal().to_string()),
-        true => format!("{}", (Decimal::ZERO - amount.as_decimal()).to_string()),
+fn fmt_amount(tx: &StarlingTransaction) -> Decimal {
+    match tx.direction {
+        Direction::In => {tx.amount.as_decimal()},
+        Direction::Out => {-tx.amount.as_decimal()},
     }
 }
