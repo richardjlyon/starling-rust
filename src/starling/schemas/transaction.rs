@@ -16,7 +16,7 @@ pub struct Transaction {
     pub direction: Direction,
     updated_at: DateTime<Utc>,
     pub transaction_time: DateTime<Utc>,
-    pub settlement_time: DateTime<Utc>,
+    pub settlement_time: Option<DateTime<Utc>>,
     source: String,
     source_sub_type: Option<String>,
     pub status: Status,

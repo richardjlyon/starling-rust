@@ -116,21 +116,23 @@ impl Bean {
         let start_date = self.start_date();
         for balance in self.balances.iter() {
             // compute opening balance
-            let mut open = balance.balance.cleared_balance.clone();
+            let mut open = balance.balance.effective_balance.clone();
 
             for tx in balance.transactions.iter() {
                 open = open - tx.amount.clone();
             }
+
+
             let line1 = format!("{} * \"Deposit\"", start_date);
             let line2 = format!(
                 "  {:<40} {:>10} {}",
                 fmt_account_name(&balance.account_name),
-                open.as_decimal(),
+                -open.as_decimal(),
                 &balance.transactions[0].amount.currency
             );
-            let line3 = EQUITY_ACCOUNT;
+            let line3 = format!("  {}",EQUITY_ACCOUNT);
 
-            write!(self.out_file, "{}\n {}\n  {}\n\n", line1, line2, line3).unwrap();
+            write!(self.out_file, "{}\n{}\n{}\n\n", line1, line2, line3).unwrap();
         }
     }
 
@@ -174,8 +176,8 @@ impl Bean {
         let now = fmt_date(&now);
         for balance in self.balances.iter() {
             let account_name = fmt_account_name(&balance.account_name);
-            let amount = balance.balance.cleared_balance.as_decimal();
-            let currency = balance.balance.cleared_balance.currency.clone();
+            let amount = balance.balance.effective_balance.as_decimal();
+            let currency = balance.balance.effective_balance.currency.clone();
 
             write!(
                 self.out_file,

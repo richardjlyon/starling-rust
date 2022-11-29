@@ -17,8 +17,11 @@ pub async fn initialise(start_date: &Option<String>) -> anyhow::Result<()> {
         let account = client.account_for_currency("GBP").await?;
         let balance = client.balance(account.account_uid).await?;
         let transactions = client
-            .transactions_from(account.account_uid, start_date)
+            .transactions_from(&account, start_date)
             .await?;
+
+        // println!("{:#?}", balance);
+        // println!("{:#?}", transactions);
 
         bean.add_account(account.clone());
 

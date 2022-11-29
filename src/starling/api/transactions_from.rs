@@ -1,29 +1,15 @@
-//! Get transactions for the given account from tne given date
-//!
+use chrono::DateTime;
 
-use crate::{
-    error::AppError,
-    starling::{
-        client::Client,
-        schemas::{
-            account::AccountId,
-            transaction::{Transaction, TransactionResponse},
-        },
-    },
-};
+use crate::{starling::{schemas::{account::Account, transaction::{Transaction, TransactionResponse}}, client::Client}, error::AppError};
+
 
 impl Client {
-    pub async fn transactions_from(
-        &self,
-        account_uid: AccountId,
-        start_date: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<Transaction>, AppError> {
-        //
-        let url = format!("feed/account/{}/settled-transactions-between", account_uid);
+    // get transactions from the given date
+    pub async fn transactions_from(&self, account: &Account, start_date: DateTime<chrono::Utc>) -> Result<Vec<Transaction>, AppError> {
+        let url = format!("feed/account/{}/category/{}", account.account_uid, account.default_category);
 
         let params = Params {
-            min_transaction_timestamp: start_date,
-            max_transaction_timestamp: chrono::Utc::now(),
+            changes_since: start_date,
         };
 
         self.get(&url, &params)
@@ -34,8 +20,6 @@ impl Client {
 
 #[derive(serde::Serialize)]
 struct Params {
-    #[serde(rename = "minTransactionTimestamp")]
-    min_transaction_timestamp: chrono::DateTime<chrono::Utc>,
-    #[serde(rename = "maxTransactionTimestamp")]
-    max_transaction_timestamp: chrono::DateTime<chrono::Utc>,
+    #[serde(rename = "changesSince")]
+    changes_since: chrono::DateTime<chrono::Utc>,
 }
