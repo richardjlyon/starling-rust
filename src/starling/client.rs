@@ -1,24 +1,14 @@
 use std::collections::HashMap;
 
+use crate::error::AppError;
 use config::Config;
 use reqwest::{
-    header::{self, ACCEPT, AUTHORIZATION, CONTENT_TYPE},
+    header::{self, HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE},
     StatusCode,
 };
 use serde::de::DeserializeOwned;
 
-use crate::error::AppError;
-use crate::starling::schemas::{
-    accounts::{Account, AccountId, AccountResponse, Balance},
-    transactions::{Transaction, TransactionResponse},
-};
-
-// use crate::schemas::transactions::{Transaction, TransactionResponse};
-// use crate::starling::schemas::accounts::{Account, AccountId, AccountResponse, Balance};
-
 const APIBASE: &str = "https://api.starlingbank.com/api/v2";
-
-// A Starling API client
 
 pub struct Client {
     pub name: String,
@@ -32,15 +22,9 @@ impl Client {
         let auth_string = format!("Bearer {}", auth_key);
         let mut headers = header::HeaderMap::new();
 
-        headers.insert(
-            AUTHORIZATION,
-            header::HeaderValue::from_str(&auth_string).unwrap(),
-        );
-        headers.insert(
-            CONTENT_TYPE,
-            header::HeaderValue::from_static("application/json"),
-        );
-        headers.insert(ACCEPT, header::HeaderValue::from_static("application/json"));
+        headers.insert(AUTHORIZATION, HeaderValue::from_str(&auth_string).unwrap());
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
 
         let client = reqwest::Client::builder()
             .default_headers(headers)
@@ -53,55 +37,8 @@ impl Client {
         }
     }
 
-    // get an account for the specified currency
-    pub async fn currency_account(&self, currency: &str) -> Result<Account, AppError> {
-        self.get("accounts", &())
-            .await
-            .map(|d: AccountResponse| d.accounts)
-            .map(|d| {
-                d.into_iter()
-                    .filter(|a| a.currency == currency)
-                    .next()
-                    .expect("one GBP account")
-            })
-    }
-
-    // endpoint /accounts/account_uid/balancd
-    pub async fn balance(&self, account_uid: &AccountId) -> Result<Balance, AppError> {
-        let url = format!("accounts/{}/balance", account_uid);
-        self.get(&url, &()).await
-    }
-
-    // endpoint /feed/account/account_uid/settled-transactions-between
-    pub async fn transactions(
-        &self,
-        account_uid: &AccountId,
-        start_date: chrono::DateTime<chrono::Utc>,
-        end_date: chrono::DateTime<chrono::Utc>,
-    ) -> Result<Vec<Transaction>, AppError> {
-        #[derive(serde::Serialize)]
-        struct Params {
-            #[serde(rename = "minTransactionTimestamp")]
-            min_transaction_timestamp: chrono::DateTime<chrono::Utc>,
-            #[serde(rename = "maxTransactionTimestamp")]
-            max_transaction_timestamp: chrono::DateTime<chrono::Utc>,
-        }
-
-        let url = format!("feed/account/{}/settled-transactions-between", account_uid);
-
-        self.get(
-            &url,
-            &Params {
-                min_transaction_timestamp: start_date,
-                max_transaction_timestamp: end_date,
-            },
-        )
-        .await
-        .map(|d: TransactionResponse| d.feed_items)
-    }
-
     // get deserialised JSON for endpoint url
-    async fn get<T: DeserializeOwned, Q: serde::Serialize>(
+    pub async fn get<T: DeserializeOwned, Q: serde::Serialize>(
         &self,
         url: &str,
         query: &Q,
@@ -153,5 +90,28 @@ fn get_key(account_name: &str) -> String {
             tracing::warn!("No API key found for account'{}'", account_name);
             std::process::exit(0);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_gets_a_key() {
+        let auth_key = get_key("personal");
+        assert_ne!(auth_key.len(), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn it_panics_when_key_missing() {
+        let auth_key = get_key("bad_name");
+    }
+
+    #[test]
+    fn it_gets_a_client() {
+        let client = Client::new("personal");
+        assert_eq!(client.name, "personal");
     }
 }

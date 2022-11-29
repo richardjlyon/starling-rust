@@ -1,4 +1,5 @@
 /target
 keys.toml
-out.rs
-starling.bean
+*.beancount
+.DS_Store
+

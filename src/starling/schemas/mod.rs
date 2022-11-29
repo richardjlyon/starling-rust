@@ -1,2 +1,31 @@
-pub mod accounts;
-pub mod transactions;
+use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
+use std::ops::Sub;
+
+pub mod account;
+pub mod balance;
+pub mod transaction;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SignedCurrencyAndAmount {
+    pub currency: String,
+    pub minor_units: i64,
+}
+
+impl SignedCurrencyAndAmount {
+    pub fn as_decimal(&self) -> Decimal {
+        Decimal::new(self.minor_units, 2)
+    }
+}
+
+impl Sub for SignedCurrencyAndAmount {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        Self {
+            currency: self.currency,
+            minor_units: self.minor_units - other.minor_units,
+        }
+    }
+}
