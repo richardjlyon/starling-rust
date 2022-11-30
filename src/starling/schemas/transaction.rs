@@ -1,6 +1,7 @@
 //! Starling `Transaction` schema
 //!
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
@@ -35,6 +36,15 @@ pub struct Transaction {
     round_up: Option<RoundUp>,
 }
 
+impl Transaction {
+    pub fn as_signed_decimal(&self) -> Decimal {
+        match self.direction {
+            Direction::Out => Decimal::new(self.amount.minor_units, 2),
+            Direction::In => Decimal::ZERO - Decimal::new(self.amount.minor_units, 2),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TransactionId(pub uuid::Uuid);
 
@@ -60,7 +70,7 @@ pub enum Direction {
     Out,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Status {
     Upcoming,

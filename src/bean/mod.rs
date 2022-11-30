@@ -15,6 +15,7 @@ use convert_case::{Case, Casing};
 use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
+use std::collections::HashSet;
 
 const EQUITY_ACCOUNT: &str = "Equity:Opening-Balances";
 
@@ -93,6 +94,12 @@ impl Bean {
     fn write_account_declarations(&mut self) {
         let start_date = self.start_date();
 
+        let mut income_statements = HashSet::new();
+
+        for tx in self.transactions.iter() {
+            income_statements.insert(fmt_income_statement_account(&tx.transaction));
+        }
+
         for account in self.accounts.iter() {
             write!(
                 self.out_file,
@@ -100,6 +107,15 @@ impl Bean {
                 &start_date,
                 fmt_account_name(&account.name),
                 account.currency
+            )
+            .unwrap();
+        }
+
+        for income_statement in income_statements.iter() {
+            write!(
+                self.out_file,
+                "{} open {:<37} {}\n",
+                &start_date, income_statement, "GBP"
             )
             .unwrap();
         }
@@ -116,18 +132,24 @@ impl Bean {
         let start_date = self.start_date();
         for balance in self.balances.iter() {
             // compute opening balance
-            let mut open = balance.balance.effective_balance.clone();
+            let mut open = dbg!(balance.balance.effective_balance.clone().as_decimal());
+
+            println!("Open: {}", open);
 
             for tx in balance.transactions.iter() {
-                open = open - tx.amount.clone();
+                if tx.status != Status::Upcoming {
+                    open = open + tx.clone().as_signed_decimal();
+                    println!("tx: {:#?}", tx.clone());
+                    println!("tx: {}", tx.clone().as_signed_decimal());
+                    println!("bl: {}\n", open);
+                }
             }
-
 
             let line1 = format!("{} * \"Deposit\"", start_date);
             let line2 = format!(
                 "  {:<40} {:>10} {}",
                 fmt_account_name(&balance.account_name),
-                -open.as_decimal(),
+                open,
                 &balance.transactions[0].amount.currency
             );
             let line3 = format!("  {}",EQUITY_ACCOUNT);
@@ -138,6 +160,8 @@ impl Bean {
 
     fn write_transactions(&mut self) {
         for tx in self.transactions.iter() {
+            if tx.transaction.status == Status::Upcoming {return};
+
             let date = fmt_date(&tx.transaction.transaction_time);
             let status = fmt_status(&tx.transaction.status);
             let counter_party_name = fmt_counterparty_name(&tx.transaction.counter_party_name);

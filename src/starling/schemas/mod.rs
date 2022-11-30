@@ -1,6 +1,6 @@
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::ops::Sub;
+use std::ops::{Sub, Add};
 
 pub mod account;
 pub mod balance;
@@ -31,3 +31,15 @@ impl Sub for SignedCurrencyAndAmount {
         }
     }
 }
+
+impl Add for SignedCurrencyAndAmount {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self::Output {
+        Self {
+            currency: self.currency,
+            minor_units: self.minor_units + other.minor_units,
+        }
+    }
+}
+
