@@ -254,7 +254,7 @@ fn fmt_reference(reference: &Option<String>) -> String {
 
 fn fmt_note(note: &Option<String>) -> String {
     match note {
-        Some(note) => note.to_string(),
+        Some(note) => format!(" ; {}", note.to_string()),
         None => String::new(),
     }
 }
