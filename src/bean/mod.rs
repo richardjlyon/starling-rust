@@ -41,8 +41,10 @@ impl Bean {
     // make an initialised bean object
     pub fn new() -> Self {
         // create a new file for writing
-        let file_name = String::from("test.beancount");
-        fs::remove_file(&file_name).unwrap();
+        let file_name = String::from("starling.beancount");
+        if std::path::Path::new(&file_name).exists() {
+            fs::remove_file(&file_name).unwrap();
+        }
         let file = OpenOptions::new()
             .create(true)
             .append(true)
@@ -132,16 +134,11 @@ impl Bean {
         let start_date = self.start_date();
         for balance in self.balances.iter() {
             // compute opening balance
-            let mut open = dbg!(balance.balance.effective_balance.clone().as_decimal());
-
-            println!("Open: {}", open);
+            let mut open = balance.balance.effective_balance.clone().as_decimal();
 
             for tx in balance.transactions.iter() {
                 if tx.status != Status::Upcoming {
                     open += tx.clone().as_signed_decimal();
-                    println!("tx: {:#?}", tx.clone());
-                    println!("tx: {}", tx.clone().as_signed_decimal());
-                    println!("bl: {}\n", open);
                 }
             }
 
@@ -169,7 +166,6 @@ impl Bean {
             let counter_party_name = fmt_counterparty_name(&tx.transaction.counter_party_name);
             let reference = fmt_reference(&tx.transaction.reference);
             let note = fmt_note(&tx.transaction.user_note);
-            // TODO fix the `anount reversed` formatting implementation logic
             let amount = fmt_amount(&tx.transaction);
 
             let line1 = format!(
