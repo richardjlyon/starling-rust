@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 
 pub async fn initialise(start_date: &Option<String>) -> anyhow::Result<()> {
     let start_date = parse_date(start_date);
-    let account_names = ["personal"];
+    let account_names = ["business", "personal"];
     let mut bean = Bean::new();
 
     for account_name in account_names {

@@ -2,7 +2,7 @@
 //! lkanguage syntax
 //!
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, Duration};
 use regex::Regex;
 use rust_decimal::Decimal;
 
@@ -196,8 +196,9 @@ impl Bean {
     }
 
     fn write_balance_assertions(&mut self) {
-        let now = chrono::Utc::now();
-        let now = fmt_date(&now);
+        // beancount balances has to be specified for end of day, so this is a hack
+        let tomorrow = chrono::Utc::now() + Duration::days(1);
+        let tomorrow = fmt_date(&tomorrow);
         for balance in self.balances.iter() {
             let account_name = fmt_account_name(&balance.account_name);
             let amount = balance.balance.effective_balance.as_decimal();
@@ -206,7 +207,7 @@ impl Bean {
             write!(
                 self.out_file,
                 "{} balance {:<27} {} {}\n",
-                now, account_name, amount, currency
+                tomorrow, account_name, amount, currency
             )
             .unwrap();
         }
