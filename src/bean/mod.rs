@@ -2,20 +2,20 @@
 //! lkanguage syntax
 //!
 
-use chrono::{DateTime, Utc, Duration};
+use chrono::{DateTime, Duration, Utc};
 use regex::Regex;
 use rust_decimal::Decimal;
 
 use crate::starling::schemas::account::Account as StarlingAccount;
 use crate::starling::schemas::balance::Balance as StarlingBalance;
-use crate::starling::schemas::transaction::{Transaction as StarlingTransaction, Direction};
+use crate::starling::schemas::transaction::{Direction, Transaction as StarlingTransaction};
 use crate::starling::schemas::transaction::{SpendingCategory, Status};
 
 use convert_case::{Case, Casing};
+use std::collections::HashSet;
 use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::collections::HashSet;
 
 const EQUITY_ACCOUNT: &str = "Equity:Opening-Balances";
 
@@ -101,9 +101,9 @@ impl Bean {
         }
 
         for account in self.accounts.iter() {
-            write!(
+            writeln!(
                 self.out_file,
-                "{} open {:<37} {}\n",
+                "{} open {:<37} {}",
                 &start_date,
                 fmt_account_name(&account.name),
                 account.currency
@@ -112,18 +112,18 @@ impl Bean {
         }
 
         for income_statement in income_statements.iter() {
-            write!(
+            writeln!(
                 self.out_file,
-                "{} open {:<37} {}\n",
-                &start_date, income_statement, "GBP"
+                "{} open {:<37} GBP",
+                &start_date, income_statement
             )
             .unwrap();
         }
 
         write!(
             self.out_file,
-            "{} open {:<37} {}\n\n",
-            &start_date, EQUITY_ACCOUNT, "GBP"
+            "{} open {:<37} GBP\n\n",
+            &start_date, EQUITY_ACCOUNT
         )
         .unwrap();
     }
@@ -138,7 +138,7 @@ impl Bean {
 
             for tx in balance.transactions.iter() {
                 if tx.status != Status::Upcoming {
-                    open = open + tx.clone().as_signed_decimal();
+                    open += tx.clone().as_signed_decimal();
                     println!("tx: {:#?}", tx.clone());
                     println!("tx: {}", tx.clone().as_signed_decimal());
                     println!("bl: {}\n", open);
@@ -152,7 +152,7 @@ impl Bean {
                 open,
                 &balance.transactions[0].amount.currency
             );
-            let line3 = format!("  {}",EQUITY_ACCOUNT);
+            let line3 = format!("  {}", EQUITY_ACCOUNT);
 
             write!(self.out_file, "{}\n{}\n{}\n\n", line1, line2, line3).unwrap();
         }
@@ -160,7 +160,9 @@ impl Bean {
 
     fn write_transactions(&mut self) {
         for tx in self.transactions.iter() {
-            if tx.transaction.status == Status::Upcoming {return};
+            if tx.transaction.status == Status::Upcoming {
+                return;
+            };
 
             let date = fmt_date(&tx.transaction.transaction_time);
             let status = fmt_status(&tx.transaction.status);
@@ -189,9 +191,9 @@ impl Bean {
                 &tx.transaction.amount.currency
             );
 
-            let transaction = format!("{}\n{}\n{}\n", line1, line2, line3);
+            let transaction = format!("{}\n{}\n{}", line1, line2, line3);
 
-            write!(self.out_file, "{}\n", transaction).unwrap();
+            writeln!(self.out_file, "{}\n", transaction).unwrap();
         }
     }
 
@@ -204,9 +206,9 @@ impl Bean {
             let amount = balance.balance.effective_balance.as_decimal();
             let currency = balance.balance.effective_balance.currency.clone();
 
-            write!(
+            writeln!(
                 self.out_file,
-                "{} balance {:<27} {} {}\n",
+                "{} balance {:<27} {} {}",
                 tomorrow, account_name, amount, currency
             )
             .unwrap();
@@ -220,6 +222,11 @@ impl Bean {
     }
 }
 
+impl Default for Bean {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 // construct an account name for the given account
 // e.g. Assets::Starling::Personal
 fn fmt_account_name(account_name: &String) -> String {
@@ -238,7 +245,7 @@ fn fmt_status(status: &Status) -> &str {
 }
 
 fn fmt_counterparty_name(name: &str) -> String {
-    format!("\"{}\"", name.to_string())
+    format!("\"{}\"", name)
 }
 
 fn fmt_reference(reference: &Option<String>) -> String {
@@ -246,7 +253,7 @@ fn fmt_reference(reference: &Option<String>) -> String {
         Some(string) => {
             let re = Regex::new(r"\s+").unwrap();
             let clean_string = re.replace_all(string, " ");
-            format!("\"{}\"", clean_string.to_string())
+            format!("\"{}\"", clean_string)
         }
         None => String::new(),
     }
@@ -254,7 +261,7 @@ fn fmt_reference(reference: &Option<String>) -> String {
 
 fn fmt_note(note: &Option<String>) -> String {
     match note {
-        Some(note) => format!(" ; {}", note.to_string()),
+        Some(note) => format!(" ; {}", note),
         None => String::new(),
     }
 }
@@ -270,7 +277,7 @@ pub fn fmt_income_statement_account(tx: &StarlingTransaction) -> String {
 
 fn fmt_amount(tx: &StarlingTransaction) -> Decimal {
     match tx.direction {
-        Direction::In => {tx.amount.as_decimal()},
-        Direction::Out => {-tx.amount.as_decimal()},
+        Direction::In => tx.amount.as_decimal(),
+        Direction::Out => -tx.amount.as_decimal(),
     }
 }

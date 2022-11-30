@@ -15,8 +15,7 @@ impl Client {
             .map(|d: AccountResponse| d.accounts)
             .map(|d| {
                 d.into_iter()
-                    .filter(|a| a.currency == currency)
-                    .next()
+                    .find(|a| a.currency == currency)
                     .expect("one GBP account")
             })
     }

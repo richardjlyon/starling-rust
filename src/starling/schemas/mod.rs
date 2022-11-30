@@ -1,6 +1,6 @@
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use std::ops::{Sub, Add};
+use std::ops::{Add, Sub};
 
 pub mod account;
 pub mod balance;
@@ -42,4 +42,3 @@ impl Add for SignedCurrencyAndAmount {
         }
     }
 }
-

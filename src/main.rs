@@ -11,9 +11,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Init {
-            start_date,
-        } => initialise(start_date).await?,
+        Commands::Init { start_date } => initialise(start_date).await?,
     }
 
     Ok(())

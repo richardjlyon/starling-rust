@@ -186,10 +186,7 @@ pub enum SpendingCategory {
 
 impl SpendingCategory {
     pub fn is_income(&self) -> bool {
-        match self {
-            Self::Income | Self::OtherIncome => true,
-            _ => false,
-        }
+        matches!(self, Self::Income | Self::OtherIncome)
     }
 }
 

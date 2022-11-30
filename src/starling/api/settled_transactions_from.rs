@@ -12,7 +12,6 @@ use crate::{
     },
 };
 
-
 impl Client {
     // get settled trasnactions from the given date
     pub async fn settled_transactions_from(
@@ -21,7 +20,10 @@ impl Client {
         start_date: chrono::DateTime<chrono::Utc>,
     ) -> Result<Vec<Transaction>, AppError> {
         //
-        let url = format!("feed/account/{}/settled-transactions-between", account.account_uid);
+        let url = format!(
+            "feed/account/{}/settled-transactions-between",
+            account.account_uid
+        );
 
         let params = Params {
             min_transaction_timestamp: start_date,
@@ -41,4 +43,3 @@ struct Params {
     #[serde(rename = "maxTransactionTimestamp")]
     max_transaction_timestamp: chrono::DateTime<chrono::Utc>,
 }
-

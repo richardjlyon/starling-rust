@@ -1,12 +1,27 @@
 use chrono::DateTime;
 
-use crate::{starling::{schemas::{account::Account, transaction::{Transaction, TransactionResponse}}, client::Client}, error::AppError};
-
+use crate::{
+    error::AppError,
+    starling::{
+        client::Client,
+        schemas::{
+            account::Account,
+            transaction::{Transaction, TransactionResponse},
+        },
+    },
+};
 
 impl Client {
     // get transactions from the given date
-    pub async fn transactions_from(&self, account: &Account, start_date: DateTime<chrono::Utc>) -> Result<Vec<Transaction>, AppError> {
-        let url = format!("feed/account/{}/category/{}", account.account_uid, account.default_category);
+    pub async fn transactions_from(
+        &self,
+        account: &Account,
+        start_date: DateTime<chrono::Utc>,
+    ) -> Result<Vec<Transaction>, AppError> {
+        let url = format!(
+            "feed/account/{}/category/{}",
+            account.account_uid, account.default_category
+        );
 
         let params = Params {
             changes_since: start_date,

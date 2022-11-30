@@ -16,9 +16,7 @@ pub async fn initialise(start_date: &Option<String>) -> anyhow::Result<()> {
         let client = StarlingClient::new(account_name);
         let account = client.account_for_currency("GBP").await?;
         let balance = client.balance(account.account_uid).await?;
-        let transactions = client
-            .transactions_from(&account, start_date)
-            .await?;
+        let transactions = client.transactions_from(&account, start_date).await?;
 
         // println!("{:#?}", balance);
         // println!("{:#?}", transactions);
@@ -54,8 +52,9 @@ fn parse_date(date: &Option<String>) -> DateTime<Utc> {
             let mut date_tz = date.clone();
             date_tz.push_str(" 00:00:00 +00:00");
             DateTime::parse_from_str(&date_tz, "%Y-%m-%d %H:%M:%S %z")
-            .unwrap().with_timezone(&Utc)
-        },
+                .unwrap()
+                .with_timezone(&Utc)
+        }
         None => chrono::Utc::now() - chrono::Duration::days(DEFAULT_DAYS),
     }
 }
