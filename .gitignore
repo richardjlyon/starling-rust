@@ -1,5 +1,5 @@
+.env
 /target
-keys.toml
-*.beancount
+/migration/target
+note.txt
 .DS_Store
-
