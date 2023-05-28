@@ -3,4 +3,4 @@
 pub mod prelude;
 
 pub mod counterparty;
-pub mod feed_item;
+pub mod transaction;

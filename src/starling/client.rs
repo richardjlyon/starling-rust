@@ -1,8 +1,7 @@
 //! Handles querying the Starling API and converting results into `Transaction` objects.
 
-use super::account::Accounts;
-use crate::starling::{
-    account::Account,
+use super::{
+    account::{Account, Accounts},
     transaction::{StarlingTransaction, StarlingTransactions},
 };
 use chrono::{DateTime, Utc};
@@ -71,7 +70,10 @@ impl StarlingClient for StarlingApiClient {
         .await
         .unwrap();
 
-        resp.body_json::<StarlingTransactions>().await.unwrap().feed_items
+        resp.body_json::<StarlingTransactions>()
+            .await
+            .unwrap()
+            .feed_items
     }
 
     async fn default_category(&self) {}

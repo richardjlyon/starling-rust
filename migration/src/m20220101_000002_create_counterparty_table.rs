@@ -1,7 +1,7 @@
 // m20220101_000001_create_counterparty_table.rs
 
 use sea_orm_migration::prelude::*;
-use super::m20220101_000001_create_feeditem_table::FeedItem;
+use super::m20220101_000001_create_transaction_table::Transaction;
 
 pub struct Migration;
 

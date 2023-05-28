@@ -2,7 +2,7 @@
 //!
 
 use crate::{
-    entities::{counterparty, feed_item, prelude::*},
+    entities::{counterparty, prelude::*, transaction},
     starling::{account::Account, client::StarlingClient, transaction::StarlingTransaction},
 };
 
@@ -17,6 +17,18 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
     let database_name = env::var("DB_NAME").expect("DB_NAME is not set in .env file");
     let url = format!("{}/{}", database_url, database_name);
     let db = Database::connect(&url).await.expect("getting database");
+
+    let transactions = client
+        .transactions_since(
+            &account.account_uid,
+            &account.default_category,
+            chrono::Duration::days(days),
+        )
+        .await;
+
+    for transaction in transactions {
+        println!("{:#?}", transaction);
+    }
 
     for item in client
         .transactions_since(
@@ -45,7 +57,7 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
 
                 // insert the new feed item
                 let record = record_from_starling_feed_item(&item, counterparty_id);
-                FeedItem::insert(record)
+                Transaction::insert(record)
                     .exec(&db)
                     .await
                     .expect("inserting feed item");
@@ -60,7 +72,7 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
                     let new_spending_category = item.spending_category;
                     let new_user_note = item.user_note.clone().unwrap_or_default();
 
-                    let record = feed_item::ActiveModel {
+                    let record = transaction::ActiveModel {
                         status: ActiveValue::set(new_status.to_owned()),
                         spending_category: ActiveValue::set(new_spending_category.to_owned()),
                         user_note: ActiveValue::set(new_user_note.to_owned()),
@@ -80,16 +92,16 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
 }
 
 // Return true if status or spending category has changed
-fn feeditem_has_changed(record: &feed_item::Model, newitem: &StarlingTransaction) -> bool {
+fn feeditem_has_changed(record: &transaction::Model, newitem: &StarlingTransaction) -> bool {
     (record.status != newitem.status.to_string())
         || (record.spending_category != newitem.spending_category.to_string())
         || (record.user_note != newitem.user_note.clone().unwrap_or_default().to_string())
 }
 
 /// Return true if a feed item with the given feed uid exists in the database.
-async fn feeditem_exists(db: &DatabaseConnection, feed_uid: &String) -> Option<feed_item::Model> {
-    FeedItem::find()
-        .filter(feed_item::Column::FeedUid.eq(feed_uid))
+async fn feeditem_exists(db: &DatabaseConnection, feed_uid: &String) -> Option<transaction::Model> {
+    Transaction::find()
+        .filter(transaction::Column::FeedUid.eq(feed_uid))
         .one(db)
         .await
         .expect("getting feed id")
@@ -110,8 +122,8 @@ async fn counterparty_exists(
 fn record_from_starling_feed_item(
     item: &StarlingTransaction,
     counterparty_id: i32,
-) -> feed_item::ActiveModel {
-    feed_item::ActiveModel {
+) -> transaction::ActiveModel {
+    transaction::ActiveModel {
         feed_uid: ActiveValue::Set(item.uid.to_owned()),
         transaction_time: ActiveValue::Set(item.transaction_time.to_owned()),
         counterparty_id: ActiveValue::Set(counterparty_id),
