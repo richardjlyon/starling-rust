@@ -2,8 +2,8 @@
 //!
 
 use crate::{
-    client::{Account, StarlingClient, StarlingFeedItem},
     entities::{counterparty, feed_item, prelude::*},
+    starling::{account::Account, client::StarlingClient, transaction::StarlingTransaction},
 };
 
 use sea_orm::*;
@@ -80,7 +80,7 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
 }
 
 // Return true if status or spending category has changed
-fn feeditem_has_changed(record: &feed_item::Model, newitem: &StarlingFeedItem) -> bool {
+fn feeditem_has_changed(record: &feed_item::Model, newitem: &StarlingTransaction) -> bool {
     (record.status != newitem.status.to_string())
         || (record.spending_category != newitem.spending_category.to_string())
         || (record.user_note != newitem.user_note.clone().unwrap_or_default().to_string())
@@ -108,7 +108,7 @@ async fn counterparty_exists(
 }
 
 fn record_from_starling_feed_item(
-    item: &StarlingFeedItem,
+    item: &StarlingTransaction,
     counterparty_id: i32,
 ) -> feed_item::ActiveModel {
     feed_item::ActiveModel {
@@ -125,7 +125,7 @@ fn record_from_starling_feed_item(
     }
 }
 
-fn counterparty_from_starling_feed_item(item: &StarlingFeedItem) -> counterparty::ActiveModel {
+fn counterparty_from_starling_feed_item(item: &StarlingTransaction) -> counterparty::ActiveModel {
     let item_counterparty_uid = item.counterparty_uid.clone().unwrap_or_default();
     counterparty::ActiveModel {
         uid: ActiveValue::Set(item_counterparty_uid.to_owned()),

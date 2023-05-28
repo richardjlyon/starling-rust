@@ -3,12 +3,13 @@
 //! Transactionsa are stored in a database. Reports can be produced in [ledger](https://ledger-cli.org/features.html) format.
 //! seaql, seaorm, sqlx
 
-mod client;
 mod db;
 mod entities;
+mod starling;
 
-use crate::client::{Account, StarlingApiClient, StarlingClient, StarlingFeedItem};
 use clap::{Parser, Subcommand};
+use starling::client::{StarlingApiClient, StarlingClient};
+
 use std::env;
 
 /// Command line arguments
@@ -31,29 +32,6 @@ enum Command {
         #[clap(short, long, default_value_t = 7)]
         days: i64,
     },
-}
-
-struct StarlingMockClient;
-impl StarlingMockClient {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-#[async_trait::async_trait]
-impl StarlingClient for StarlingMockClient {
-    async fn accounts(&self) -> Vec<Account> {
-        vec![]
-    }
-    async fn transactions_since(
-        &self,
-        _account_uid: &str,
-        _category: &str,
-        _since: chrono::Duration,
-    ) -> Vec<StarlingFeedItem> {
-        vec![]
-    }
-    async fn default_category(&self) {}
 }
 
 #[tokio::main]
