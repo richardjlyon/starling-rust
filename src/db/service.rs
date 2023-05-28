@@ -30,7 +30,8 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
             // if the feed item doesn't already exist
             None => {
                 // insert or get the counterparty id
-                let counterparty_id = match counterparty_exists(&db, &item.counterparty_uid).await {
+                let item_counterparty_uid = item.counterparty_uid.clone().unwrap_or_default();
+                let counterparty_id = match counterparty_exists(&db, &item_counterparty_uid).await {
                     Some(counterparty) => counterparty.id,
                     None => {
                         let counterparty = counterparty_from_starling_feed_item(&item);
@@ -55,22 +56,26 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
                 if feeditem_has_changed(&record, &item) {
                     // update the feed item status
                     // TODO : refactor this to update status field only
+                    let new_status = item.status.to_string();
+                    let new_spending_category = item.spending_category;
+                    let new_user_note = item.user_note.clone().unwrap_or_default();
+
                     let record = feed_item::ActiveModel {
+                        status: ActiveValue::set(new_status.to_owned()),
+                        spending_category: ActiveValue::set(new_spending_category.to_owned()),
+                        user_note: ActiveValue::set(new_user_note.to_owned()),
                         id: ActiveValue::Set(record.id.to_owned()),
                         feed_uid: ActiveValue::Set(record.feed_uid.to_owned()),
                         transaction_time: ActiveValue::set(record.transaction_time.to_owned()),
                         counterparty_id: ActiveValue::set(record.counterparty_id.to_owned()),
                         amount: ActiveValue::set(record.amount).to_owned(),
-                        spending_category: ActiveValue::set(item.spending_category.to_owned()),
                         currency: ActiveValue::set(record.currency.to_owned()),
                         reference: ActiveValue::set(record.reference.to_owned()),
-                        status: ActiveValue::set(item.status.to_string()),
                     };
                     record.update(&db).await.expect("updating feed item");
                 }
             }
         }
-        println!("{:#?}", item);
     }
 }
 
@@ -78,6 +83,7 @@ pub async fn insert_or_update(client: &dyn StarlingClient, account: &Account, da
 fn feeditem_has_changed(record: &feed_item::Model, newitem: &StarlingFeedItem) -> bool {
     (record.status != newitem.status.to_string())
         || (record.spending_category != newitem.spending_category.to_string())
+        || (record.user_note != newitem.user_note.clone().unwrap_or_default().to_string())
 }
 
 /// Return true if a feed item with the given feed uid exists in the database.
@@ -113,14 +119,16 @@ fn record_from_starling_feed_item(
         spending_category: ActiveValue::set(item.spending_category.to_owned()),
         currency: ActiveValue::set(item.currency().to_owned()),
         reference: ActiveValue::set(item.reference.to_owned()),
+        user_note: ActiveValue::set(item.user_note.clone().unwrap_or_default().to_owned()),
         status: ActiveValue::set(item.status.to_string()),
         ..Default::default()
     }
 }
 
 fn counterparty_from_starling_feed_item(item: &StarlingFeedItem) -> counterparty::ActiveModel {
+    let item_counterparty_uid = item.counterparty_uid.clone().unwrap_or_default();
     counterparty::ActiveModel {
-        uid: ActiveValue::Set(item.counterparty_uid.to_owned()),
+        uid: ActiveValue::Set(item_counterparty_uid.to_owned()),
         name: ActiveValue::Set(item.counterparty_name.to_owned()),
         r#type: ActiveValue::Set(item.counterparty_type.to_owned()),
         ..Default::default()

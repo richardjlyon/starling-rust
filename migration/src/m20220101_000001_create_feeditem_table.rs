@@ -26,6 +26,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(FeedItem::Currency).string().not_null())
                     .col(ColumnDef::new(FeedItem::SpendingCategory).string().not_null())
                     .col(ColumnDef::new(FeedItem::Reference).string().not_null())
+                    .col(ColumnDef::new(FeedItem::UserNote).string().not_null())
                     .col(ColumnDef::new(FeedItem::Status).string().not_null())
                     .to_owned(),
             )
@@ -52,5 +53,6 @@ pub enum FeedItem {
     Currency,
     SpendingCategory,
     Reference,
+    UserNote,
     Status,
 }

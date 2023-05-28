@@ -15,6 +15,7 @@ pub struct Model {
     pub currency: String,
     pub spending_category: String,
     pub reference: String,
+    pub user_note: String,
     pub status: String,
 }
 

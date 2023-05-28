@@ -39,7 +39,7 @@ pub struct StarlingFeedItem {
     #[serde(rename = "counterPartyType")]
     pub counterparty_type: String,
     #[serde(rename = "counterPartyUid")]
-    pub counterparty_uid: String,
+    pub counterparty_uid: Option<String>,
     #[serde(rename = "counterPartyName")]
     pub counterparty_name: String,
     pub direction: Direction,
