@@ -1,3 +1,5 @@
+// m20220101_000003_create_transaction_table.rs
+
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -41,7 +43,6 @@ impl MigrationTrait for Migration {
     }
 }
 
-/// Learn more at https://docs.rs/sea-query#iden
 #[derive(Iden)]
 pub enum Transaction {
     Table,

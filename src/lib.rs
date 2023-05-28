@@ -1,3 +1,3 @@
-pub mod starling;
-pub mod entities;
 pub mod db;
+pub mod entities;
+pub mod starling;

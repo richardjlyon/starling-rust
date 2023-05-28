@@ -7,11 +7,11 @@
 // mod entities;
 // mod starling;
 
-use std::env;
 use clap::{Parser, Subcommand};
+use std::env;
 
-use money::starling::client::{StarlingApiClient, StarlingClient};
 use money::db;
+use money::starling::client::{StarlingApiClient, StarlingClient};
 
 /// Command line arguments
 #[derive(Parser, Debug, Clone)]

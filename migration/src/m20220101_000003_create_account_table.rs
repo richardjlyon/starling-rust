@@ -1,7 +1,6 @@
-// m20220101_000001_create_counterparty_table.rs
+// m20220101_000003_create_account_table.rs
 
 use sea_orm_migration::prelude::*;
-use super::m20220101_000001_create_transaction_table::Transaction;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -9,40 +8,42 @@ pub struct Migration;
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
-    // Create the Counterparty table.
+    // Create the Account table.
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .create_table(
                 Table::create()
-                    .table(Counterparty::Table)
+                    .table(Account::Table)
                     .col(
-                        ColumnDef::new(Counterparty::Id)
+                        ColumnDef::new(Account::Id)
                             .integer()
                             .not_null()
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Counterparty::Uid).string().not_null())
-                    .col(ColumnDef::new(Counterparty::Type).string().not_null())
-                    .col(ColumnDef::new(Counterparty::Name).string().not_null())
+                    .col(ColumnDef::new(Account::AccountUid).string().not_null())
+                    .col(ColumnDef::new(Account::CreatedAt).timestamp().not_null())
+                    .col(ColumnDef::new(Account::DefaultCategory).string().not_null())
+                    .col(ColumnDef::new(Account::Name).string().not_null())
                     .to_owned(),
             )
             .await
     }
 
-    // Drop the Counterparty table.
+    // Drop the Account table.
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Counterparty::Table).to_owned())
+            .drop_table(Table::drop().table(Account::Table).to_owned())
             .await
     }
 }
 
 #[derive(Iden)]
-pub enum Counterparty {
+pub enum Account {
     Table,
     Id,
-    Uid,
-    Type,
+    AccountUid,
+    CreatedAt,
+    DefaultCategory,
     Name,
 }
