@@ -3,14 +3,15 @@
 //! Transactionsa are stored in a database. Reports can be produced in [ledger](https://ledger-cli.org/features.html) format.
 //! seaql, seaorm, sqlx
 
-mod db;
-mod entities;
-mod starling;
-
-use clap::{Parser, Subcommand};
-use starling::client::{StarlingApiClient, StarlingClient};
+// mod db;
+// mod entities;
+// mod starling;
 
 use std::env;
+use clap::{Parser, Subcommand};
+
+use money::starling::client::{StarlingApiClient, StarlingClient};
+use money::db;
 
 /// Command line arguments
 #[derive(Parser, Debug, Clone)]

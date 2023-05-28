@@ -1,8 +1,9 @@
 [package]
-name = "starling"
+name = "money"
 version = "0.1.0"
 authors = ["Richard <richlyon@mac.com>"]
 edition = "2021"
+default-run = "cli"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
