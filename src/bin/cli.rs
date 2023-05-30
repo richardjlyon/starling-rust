@@ -3,8 +3,8 @@
 //! Transactionsa are stored in a database. Reports can be produced in [ledger](https://ledger-cli.org/features.html) format.
 
 use clap::{Parser, Subcommand};
-use money::commands::transactions::get_transactions;
-use std::env;
+use money::commands::{accounts::get_accounts, transactions::get_transactions};
+use std::{env, process};
 
 use money::starling::client::StarlingApiClient;
 
@@ -46,12 +46,20 @@ async fn main() -> std::io::Result<()> {
     // let client = StarlingMockClient::new();
 
     match cli.command {
-        Commands::Accounts => todo!(),
+        Commands::Accounts => {
+            if let Err(e) = get_accounts(&client).await {
+                println!("Application error: {}", e);
+                process::exit(1);
+            }
+        }
 
         Commands::Balances => todo!(),
 
         Commands::Transactions { days } => {
-            get_transactions(&client, days);
+            if let Err(e) = get_transactions(&client, days).await {
+                println!("Application error: {}", e);
+                process::exit(1);
+            }
         }
     }
 
