@@ -7,7 +7,7 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub feed_uid: String,
+    pub uid: String,
     pub transaction_time: DateTimeUtc,
     pub counterparty_id: i32,
     #[sea_orm(column_type = "Float")]

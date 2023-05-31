@@ -21,12 +21,24 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Transaction::FeedUid).string().not_null())
-                    .col(ColumnDef::new(Transaction::TransactionTime).timestamp().not_null())
-                    .col(ColumnDef::new(Transaction::CounterpartyID).integer().not_null())
+                    .col(ColumnDef::new(Transaction::Uid).string().not_null())
+                    .col(
+                        ColumnDef::new(Transaction::TransactionTime)
+                            .timestamp()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Transaction::CounterpartyID)
+                            .integer()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(Transaction::Amount).float().not_null())
                     .col(ColumnDef::new(Transaction::Currency).string().not_null())
-                    .col(ColumnDef::new(Transaction::SpendingCategory).string().not_null())
+                    .col(
+                        ColumnDef::new(Transaction::SpendingCategory)
+                            .string()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(Transaction::Reference).string().not_null())
                     .col(ColumnDef::new(Transaction::UserNote).string().not_null())
                     .col(ColumnDef::new(Transaction::Status).string().not_null())
@@ -47,7 +59,7 @@ impl MigrationTrait for Migration {
 pub enum Transaction {
     Table,
     Id,
-    FeedUid,
+    Uid,
     TransactionTime,
     CounterpartyID,
     Amount,

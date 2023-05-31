@@ -19,7 +19,7 @@ pub struct StarlingTransaction {
     #[serde(rename = "counterPartyUid")]
     pub counterparty_uid: Option<String>,
     pub direction: Direction,
-    pub reference: String,
+    pub reference: Option<String>,
     #[serde(rename = "spendingCategory")]
     pub spending_category: String,
     pub status: Status,

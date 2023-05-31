@@ -47,10 +47,10 @@ async fn main() -> std::io::Result<()> {
             }
         }
         Commands::Transactions { days } => {
-            // if let Err(e) = get_transactions(&client, days).await {
-            //     println!("Application error: {}", e);
-            //     process::exit(1);
-            // }
+            if let Err(e) = get_transactions(days).await {
+                println!("Application error: {}", e);
+                process::exit(1);
+            }
         }
     }
 

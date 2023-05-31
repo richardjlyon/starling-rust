@@ -20,10 +20,9 @@ pub async fn initialise() -> Result<()> {
     let db = get_database().await;
     let config = Config::new();
     for item in config.token.iter() {
-        for (name, token) in item.iter() {
+        for token in item.values() {
             let client = StarlingApiClient::new(token);
             for account in client.accounts().await.iter() {
-                println!("Updating {}", name);
                 let record = account::ActiveModel {
                     account_uid: ActiveValue::set(account.account_uid.to_owned()),
                     created_at: ActiveValue::set(account.created_at.to_owned()),
@@ -38,9 +37,3 @@ pub async fn initialise() -> Result<()> {
 
     Ok(())
 }
-
-// pub async fn insert_or_update(account: &Account) {
-//     let db = get_database().await;
-
-//     println!("{:#?}", account);
-// }
