@@ -4,7 +4,7 @@
 
 use clap::{Parser, Subcommand};
 use money::commands::{database::initialise_database, transactions::get_transactions};
-use std::{env, process};
+use std::process;
 
 use money::starling::client::StarlingApiClient;
 
@@ -35,31 +35,22 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    tracing_subscriber::fmt::init();
-    dotenvy::dotenv().ok();
-
     let cli = Cli::parse();
-
-    let personal_token =
-        env::var("PERSONAL_TOKEN").expect("PERSONAL_TOKEN is not set in .env file");
-    let client = StarlingApiClient::new(&personal_token);
-    // let client = StarlingMockClient::new();
+    tracing_subscriber::fmt::init();
 
     match cli.command {
+        Commands::Balances => todo!(),
         Commands::Init => {
             if let Err(e) = initialise_database().await {
                 println!("Application error: {}", e);
                 process::exit(1);
             }
         }
-
-        Commands::Balances => todo!(),
-
         Commands::Transactions { days } => {
-            if let Err(e) = get_transactions(&client, days).await {
-                println!("Application error: {}", e);
-                process::exit(1);
-            }
+            // if let Err(e) = get_transactions(&client, days).await {
+            //     println!("Application error: {}", e);
+            //     process::exit(1);
+            // }
         }
     }
 

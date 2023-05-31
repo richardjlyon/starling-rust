@@ -6,16 +6,16 @@ use crate::{
     entities::{counterparty, prelude::*, transaction},
     starling::{account::Account, client::StarlingClient, transaction::StarlingTransaction},
 };
+use anyhow::Result;
 use sea_orm::*;
 use std::env;
 
 // DELETE * FROM transaction;
-pub async fn delete_all() {
+pub async fn delete_all() -> Result<()> {
     let db = get_database().await;
-    transaction::Entity::delete_many()
-        .exec(&db)
-        .await
-        .expect("deleting accounts");
+    transaction::Entity::delete_many().exec(&db).await?;
+
+    Ok(())
 }
 
 /// Inser or update a list of Starling transactions for the specified account and number of days.

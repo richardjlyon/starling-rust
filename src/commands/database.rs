@@ -1,17 +1,10 @@
 //! Command Line Interface `Database` commands
 //!
 
+use crate::db;
+use anyhow::Result;
 use std::io::Write;
 use std::{io, process};
-
-use crate::entities::account;
-use crate::{
-    config::Config,
-    db,
-    starling::client::{StarlingApiClient, StarlingClient},
-};
-use anyhow::Result;
-use sea_orm::*;
 
 /// Initialise the database.
 ///
@@ -19,37 +12,16 @@ use sea_orm::*;
 /// transaction data for all accounts and saving spaces.
 ///
 pub async fn initialise_database() -> Result<()> {
-    let config = Config::new();
-
     if !proceed() {
         println!("Exiting.");
         process::exit(1);
     }
 
-    // process accounts
-    db::account::delete_all().await;
-    db::transaction::delete_all().await;
-    db::counterparty::delete_all().await;
+    db::account::delete_all().await?;
+    db::transaction::delete_all().await?;
+    db::counterparty::delete_all().await?;
 
-    // delete the old ones
-    let db = Database::connect(&config.db_url())
-        .await
-        .expect("getting database");
-
-    let res: DeleteResult = account::Entity::delete_many()
-        .exec(&db)
-        .await
-        .expect("deleting accounts");
-
-    for item in config.token.iter() {
-        for (name, token) in item.iter() {
-            // drop and reload the accounts
-            let client = StarlingApiClient::new(token);
-            for account in client.accounts().await.iter() {
-                db::account::insert_or_update(&account);
-            }
-        }
-    }
+    db::account::initialise().await?;
 
     Ok(())
 }
