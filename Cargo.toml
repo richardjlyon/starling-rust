@@ -23,4 +23,6 @@ sea-orm = { version="0.11.3", features = [ "sqlx-mysql", "runtime-tokio-native-t
 strum_macros = "0.24"
 strum = { version = "0.24.1", features = ["derive"]}
 cargo-watch = "8.4.0"
+anyhow = "1.0.71"
+serde_yaml = "0.9.21"
 # futures = "0.3.28"

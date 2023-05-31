@@ -1,13 +1,22 @@
 //! Services for interacting with the database.
 //!
 
+use super::get_database;
 use crate::{
     entities::{counterparty, prelude::*, transaction},
     starling::{account::Account, client::StarlingClient, transaction::StarlingTransaction},
 };
-
 use sea_orm::*;
 use std::env;
+
+// DELETE * FROM transaction;
+pub async fn delete_all() {
+    let db = get_database().await;
+    transaction::Entity::delete_many()
+        .exec(&db)
+        .await
+        .expect("deleting accounts");
+}
 
 /// Inser or update a list of Starling transactions for the specified account and number of days.
 ///

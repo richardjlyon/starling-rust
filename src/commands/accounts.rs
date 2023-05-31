@@ -1,7 +1,7 @@
 //! Command Line Interface `Accounts` commands
 //!
 
-use std::error::Error;
+use anyhow::Result;
 
 use crate::{
     db,
@@ -9,6 +9,6 @@ use crate::{
 };
 
 /// Fetch account information from Starling and populate the database
-pub async fn get_accounts(client: &StarlingApiClient) -> Result<(), Box<dyn Error>> {
+pub async fn get_accounts() -> Result<()> {
     Ok(())
 }

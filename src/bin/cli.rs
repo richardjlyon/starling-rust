@@ -3,7 +3,7 @@
 //! Transactionsa are stored in a database. Reports can be produced in [ledger](https://ledger-cli.org/features.html) format.
 
 use clap::{Parser, Subcommand};
-use money::commands::{accounts::get_accounts, transactions::get_transactions};
+use money::commands::{database::initialise_database, transactions::get_transactions};
 use std::{env, process};
 
 use money::starling::client::StarlingApiClient;
@@ -20,7 +20,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Load accounts to the database
-    Accounts,
+    Init,
 
     /// Account balances
     Balances,
@@ -42,12 +42,12 @@ async fn main() -> std::io::Result<()> {
 
     let personal_token =
         env::var("PERSONAL_TOKEN").expect("PERSONAL_TOKEN is not set in .env file");
-    let client = StarlingApiClient::new(personal_token);
+    let client = StarlingApiClient::new(&personal_token);
     // let client = StarlingMockClient::new();
 
     match cli.command {
-        Commands::Accounts => {
-            if let Err(e) = get_accounts(&client).await {
+        Commands::Init => {
+            if let Err(e) = initialise_database().await {
                 println!("Application error: {}", e);
                 process::exit(1);
             }
