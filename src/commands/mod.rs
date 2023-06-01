@@ -1,3 +1,3 @@
-pub mod accounts;
-pub mod database;
+pub mod account;
+pub mod admin;
 pub mod transactions;

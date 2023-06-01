@@ -12,6 +12,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20220101_000001_create_transaction_table::Migration),
             Box::new(m20220101_000002_create_counterparty_table::Migration),
-            Box::new(m20220101_000003_create_account_table::Migration),]
+            Box::new(m20220101_000003_create_account_table::Migration),
+        ]
     }
 }

@@ -11,7 +11,7 @@ pub struct Accounts {
 #[derive(Deserialize, Debug)]
 pub struct Account {
     #[serde(rename = "accountUid")]
-    pub account_uid: String,
+    pub uid: String,
     #[serde(rename = "createdAt")]
     pub created_at: DateTime<Utc>,
     #[serde(rename = "defaultCategory")]

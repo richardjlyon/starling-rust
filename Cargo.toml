@@ -31,4 +31,5 @@ strum = { version = "0.24.1", features = ["derive"]}
 anyhow = "1.0.71"
 sea-orm-migration = "0.11.3"
 migration = {path = "migration"}
+colored = "2.0.0"
 # futures = "0.3.28"

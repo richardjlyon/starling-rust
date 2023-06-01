@@ -20,11 +20,11 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Account::Token).string().not_null())
-                    .col(ColumnDef::new(Account::AccountUid).string().not_null())
+                    .col(ColumnDef::new(Account::Name).string().not_null())
+                    .col(ColumnDef::new(Account::Uid).string().not_null())
                     .col(ColumnDef::new(Account::CreatedAt).timestamp().not_null())
                     .col(ColumnDef::new(Account::DefaultCategory).string().not_null())
-                    .col(ColumnDef::new(Account::Name).string().not_null())
+                    .col(ColumnDef::new(Account::Token).string_len(1400).not_null())
                     .to_owned(),
             )
             .await
@@ -42,9 +42,9 @@ impl MigrationTrait for Migration {
 pub enum Account {
     Table,
     Id,
-    Token,
-    AccountUid,
+    Name,
+    Uid,
     CreatedAt,
     DefaultCategory,
-    Name,
+    Token,
 }

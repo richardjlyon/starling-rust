@@ -17,39 +17,41 @@ use sea_orm::*;
 ///
 /// If the transaction doesn't exist, insert it. If it exists and its status has changed, update it.
 pub async fn insert_or_update(days: i64) {
-    let db = get_database().await;
+    let db = get_database().await.unwrap();
     let config = Config::new();
-    for item in config.token.iter() {
-        for token in item.values() {
-            let client = StarlingApiClient::new(token);
-            for account in client.accounts().await.iter() {
-                //  fetch latest transactions
-                let transactions = client
-                    .transactions_since(
-                        &account.account_uid,
-                        &account.default_category,
-                        chrono::Duration::days(days),
-                    )
-                    .await;
+    config.load();
 
-                //  insert or update tables
-                for transaction in transactions {
-                    println!("{:#?}", transaction);
-                    match transaction_exists(&db, &transaction.uid).await {
-                        Some(record) => {
-                            if transaction_changed(&record, &transaction) {
-                                // update the transaction
-                            }
-                        }
-                        None => {
-                            //  insert the counterparty
-                            //  insert the transaction
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // for item in config.token.unwrap().iter() {
+    //     for token in item.values() {
+    //         let client = StarlingApiClient::new(token);
+    //         for account in client.accounts().await.iter() {
+    //             //  fetch latest transactions
+    //             let transactions = client
+    //                 .transactions_since(
+    //                     &account.uid,
+    //                     &account.default_category,
+    //                     chrono::Duration::days(days),
+    //                 )
+    //                 .await;
+
+    //             //  insert or update tables
+    //             for transaction in transactions {
+    //                 println!("{:#?}", transaction);
+    //                 match transaction_exists(&db, &transaction.uid).await {
+    //                     Some(record) => {
+    //                         if transaction_changed(&record, &transaction) {
+    //                             // update the transaction
+    //                         }
+    //                     }
+    //                     None => {
+    //                         //  insert the counterparty
+    //                         //  insert the transaction
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     // for transaction in transactions {
     //     println!("{:#?}", transaction);
