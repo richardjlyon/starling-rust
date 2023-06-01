@@ -16,3 +16,13 @@ db:
   password: "ZZZ"
   name: starling_db
 ```
+
+## Use
+
+```
+$ money db init
+$ money account add [token]
+$ money account list
+$ money transactions update
+
+```

@@ -11,17 +11,15 @@ use std::{io, process};
 /// Drop and reinstate the tables if they exist, fetch account data from Starling and save, and initialise with
 /// transaction data for all accounts and saving spaces.
 ///
-pub async fn initialise_database() -> Result<()> {
+pub async fn initialise() -> Result<()> {
     if !proceed() {
         println!("Exiting.");
         process::exit(1);
     }
 
-    db::account::delete_all().await?;
-    db::transaction::delete_all().await?;
-    db::counterparty::delete_all().await?;
+    db::reset().await?;
 
-    db::account::initialise().await?;
+    // db::account::initialise().await?;
 
     Ok(())
 }

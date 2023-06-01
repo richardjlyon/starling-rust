@@ -3,10 +3,10 @@
 //! Transactionsa are stored in a database. Reports can be produced in [ledger](https://ledger-cli.org/features.html) format.
 
 use clap::{arg, Command};
-use money::commands::{database::initialise_database, transactions::get_transactions};
+use money::commands;
 use std::process;
 
-use money::starling::client::StarlingApiClient;
+
 
 /// Commands
 ///
@@ -39,11 +39,10 @@ async fn main() {
 
     match matches.subcommand() {
         Some(("db", sub_matches)) => {
-            let init_command = sub_matches.subcommand().unwrap();
-            match init_command {
+            let db_command = sub_matches.subcommand().unwrap();
+            match db_command {
                 ("init", _) => {
-                    println!("Initialising database");
-                    if let Err(e) = initialise_database().await {
+                    if let Err(e) = commands::database::initialise().await {
                         println!("Application error: {}", e);
                         process::exit(1);
                     }
@@ -54,14 +53,14 @@ async fn main() {
             }
         }
 
-        Some(("accounts", sub_matches)) => println!("Processing accounts"),
+        Some(("accounts", _sub_matches)) => println!("Processing accounts"),
 
-        Some(("balances", sub_matches)) => println!("Processing balances"),
+        Some(("balances", _sub_matches)) => println!("Processing balances"),
 
         Some(("transactions", sub_matches)) => {
             println!("Processing transactions");
             let days = *sub_matches.get_one::<i64>("DAYS").expect("required");
-            if let Err(e) = get_transactions(days).await {
+            if let Err(e) = commands::transactions::update(days).await {
                 println!("Application error: {}", e);
                 process::exit(1);
             }

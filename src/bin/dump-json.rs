@@ -1,8 +1,5 @@
 // Script to dump the feed_item as a JSON file, for testing aginst
 
-use money::starling::client::{StarlingApiClient, StarlingClient};
-use std::env;
-
 #[tokio::main]
 async fn main() {
     // dotenvy::dotenv().ok();

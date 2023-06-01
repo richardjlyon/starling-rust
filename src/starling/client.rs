@@ -7,11 +7,6 @@ use super::{
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
-enum AccountType {
-    Personal(String),
-    Business(String),
-}
-
 #[async_trait::async_trait]
 pub trait StarlingClient {
     async fn accounts(&self) -> Vec<Account>;

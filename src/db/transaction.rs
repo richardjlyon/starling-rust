@@ -4,23 +4,14 @@
 use super::get_database;
 use crate::{
     config::Config,
-    entities::{counterparty, prelude::*, transaction},
+    entities::{prelude::*, transaction},
     starling::{
-        account::Account,
         client::{StarlingApiClient, StarlingClient},
         transaction::StarlingTransaction,
     },
 };
-use anyhow::Result;
+
 use sea_orm::*;
-
-// DELETE * FROM transaction;
-pub async fn delete_all() -> Result<()> {
-    let db = get_database().await;
-    transaction::Entity::delete_many().exec(&db).await?;
-
-    Ok(())
-}
 
 /// Insert or update a list of Starling transactions for the specified account and number of days.
 ///
@@ -41,19 +32,20 @@ pub async fn insert_or_update(days: i64) {
                     )
                     .await;
 
-                //  for each transaction
+                //  insert or update tables
                 for transaction in transactions {
                     println!("{:#?}", transaction);
-                    //      if the transaction is new
                     match transaction_exists(&db, &transaction.uid).await {
-                        Some(_) => todo!(),
-                        None => todo!(),
+                        Some(record) => {
+                            if transaction_changed(&record, &transaction) {
+                                // update the transaction
+                            }
+                        }
+                        None => {
+                            //  insert the counterparty
+                            //  insert the transaction
+                        }
                     }
-                    //          insert the counterparty
-                    //          insert the transaction
-                    //      else if the transaction has changed
-                    //           update the transaction
-                    //
                 }
             }
         }
@@ -137,48 +129,48 @@ async fn transaction_exists(
 }
 
 // Return true if status or spending category has changed
-fn feeditem_has_changed(record: &transaction::Model, newitem: &StarlingTransaction) -> bool {
+fn transaction_changed(record: &transaction::Model, newitem: &StarlingTransaction) -> bool {
     (record.status != newitem.status.to_string())
         || (record.spending_category != newitem.spending_category.to_string())
         || (record.user_note != newitem.user_note.clone().unwrap_or_default().to_string())
 }
 
-/// Return true if a counterparty with the given counterparty uid exists in the database.
-async fn counterparty_exists(
-    db: &DatabaseConnection,
-    counterparty_uid: &String,
-) -> Option<counterparty::Model> {
-    Counterparty::find()
-        .filter(counterparty::Column::Uid.eq(counterparty_uid))
-        .one(db)
-        .await
-        .expect("getting counterparty id")
-}
+// Return true if a counterparty with the given counterparty uid exists in the database.
+// async fn counterparty_exists(
+//     db: &DatabaseConnection,
+//     counterparty_uid: &String,
+// ) -> Option<counterparty::Model> {
+//     Counterparty::find()
+//         .filter(counterparty::Column::Uid.eq(counterparty_uid))
+//         .one(db)
+//         .await
+//         .expect("getting counterparty id")
+// }
 
-fn record_from_starling_feed_item(
-    item: &StarlingTransaction,
-    counterparty_id: i32,
-) -> transaction::ActiveModel {
-    transaction::ActiveModel {
-        uid: ActiveValue::Set(item.uid.to_owned()),
-        transaction_time: ActiveValue::Set(item.transaction_time.to_owned()),
-        counterparty_id: ActiveValue::Set(counterparty_id),
-        amount: ActiveValue::set(item.amount()).to_owned(),
-        spending_category: ActiveValue::set(item.spending_category.to_owned()),
-        currency: ActiveValue::set(item.currency().to_owned()),
-        reference: ActiveValue::set(item.reference.clone().unwrap_or_default().to_owned()),
-        user_note: ActiveValue::set(item.user_note.clone().unwrap_or_default().to_owned()),
-        status: ActiveValue::set(item.status.to_string()),
-        ..Default::default()
-    }
-}
+// fn record_from_starling_feed_item(
+//     item: &StarlingTransaction,
+//     counterparty_id: i32,
+// ) -> transaction::ActiveModel {
+//     transaction::ActiveModel {
+//         uid: ActiveValue::Set(item.uid.to_owned()),
+//         transaction_time: ActiveValue::Set(item.transaction_time.to_owned()),
+//         counterparty_id: ActiveValue::Set(counterparty_id),
+//         amount: ActiveValue::set(item.amount()).to_owned(),
+//         spending_category: ActiveValue::set(item.spending_category.to_owned()),
+//         currency: ActiveValue::set(item.currency().to_owned()),
+//         reference: ActiveValue::set(item.reference.clone().unwrap_or_default().to_owned()),
+//         user_note: ActiveValue::set(item.user_note.clone().unwrap_or_default().to_owned()),
+//         status: ActiveValue::set(item.status.to_string()),
+//         ..Default::default()
+//     }
+// }
 
-fn counterparty_from_starling_feed_item(item: &StarlingTransaction) -> counterparty::ActiveModel {
-    let item_counterparty_uid = item.counterparty_uid.clone().unwrap_or_default();
-    counterparty::ActiveModel {
-        uid: ActiveValue::Set(item_counterparty_uid.to_owned()),
-        name: ActiveValue::Set(item.counterparty_name.to_owned()),
-        r#type: ActiveValue::Set(item.counterparty_type.to_owned()),
-        ..Default::default()
-    }
-}
+// fn counterparty_from_starling_feed_item(item: &StarlingTransaction) -> counterparty::ActiveModel {
+//     let item_counterparty_uid = item.counterparty_uid.clone().unwrap_or_default();
+//     counterparty::ActiveModel {
+//         uid: ActiveValue::Set(item_counterparty_uid.to_owned()),
+//         name: ActiveValue::Set(item.counterparty_name.to_owned()),
+//         r#type: ActiveValue::Set(item.counterparty_type.to_owned()),
+//         ..Default::default()
+//     }
+// }

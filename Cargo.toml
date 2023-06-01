@@ -5,6 +5,13 @@ authors = ["Richard <richlyon@mac.com>"]
 edition = "2021"
 default-run = "cli"
 
+[workspace]
+
+members = [
+    ".",
+    "migration",
+]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -21,6 +28,7 @@ async-trait = "0.1.68"
 sea-orm = { version="0.11.3", features = [ "sqlx-mysql", "runtime-tokio-native-tls"] }
 strum_macros = "0.24"
 strum = { version = "0.24.1", features = ["derive"]}
-cargo-watch = "8.4.0"
 anyhow = "1.0.71"
+sea-orm-migration = "0.11.3"
+migration = {path = "migration"}
 # futures = "0.3.28"

@@ -1,11 +1,9 @@
 // m20220101_000001_create_counterparty_table.rs
 
 use sea_orm_migration::prelude::*;
-use super::m20220101_000001_create_transaction_table::Transaction;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
-
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {

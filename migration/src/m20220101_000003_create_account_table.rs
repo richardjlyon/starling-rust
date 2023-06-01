@@ -5,7 +5,6 @@ use sea_orm_migration::prelude::*;
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
-
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     // Create the Account table.
@@ -21,6 +20,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
+                    .col(ColumnDef::new(Account::Token).string().not_null())
                     .col(ColumnDef::new(Account::AccountUid).string().not_null())
                     .col(ColumnDef::new(Account::CreatedAt).timestamp().not_null())
                     .col(ColumnDef::new(Account::DefaultCategory).string().not_null())
@@ -42,6 +42,7 @@ impl MigrationTrait for Migration {
 pub enum Account {
     Table,
     Id,
+    Token,
     AccountUid,
     CreatedAt,
     DefaultCategory,

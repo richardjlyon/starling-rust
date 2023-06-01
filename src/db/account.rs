@@ -7,14 +7,6 @@ use crate::{config::Config, starling::client::StarlingClient};
 use anyhow::Result;
 use sea_orm::*;
 
-// DELETE * FROM account;
-pub async fn delete_all() -> Result<()> {
-    let db = get_database().await;
-    account::Entity::delete_many().exec(&db).await?;
-
-    Ok(())
-}
-
 // populate accounts table
 pub async fn initialise() -> Result<()> {
     let db = get_database().await;
@@ -24,6 +16,7 @@ pub async fn initialise() -> Result<()> {
             let client = StarlingApiClient::new(token);
             for account in client.accounts().await.iter() {
                 let record = account::ActiveModel {
+                    token: ActiveValue::set(token.to_owned()),
                     account_uid: ActiveValue::set(account.account_uid.to_owned()),
                     created_at: ActiveValue::set(account.created_at.to_owned()),
                     default_category: ActiveValue::set(account.default_category.to_owned()),
