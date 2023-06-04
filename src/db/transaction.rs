@@ -6,7 +6,6 @@ use crate::{
     config::Config,
     entities::{prelude::*, transaction},
     starling::{
-        client::{StarlingApiClient, StarlingClient},
         transaction::StarlingTransaction,
     },
 };
@@ -16,8 +15,8 @@ use sea_orm::*;
 /// Insert or update a list of Starling transactions for the specified account and number of days.
 ///
 /// If the transaction doesn't exist, insert it. If it exists and its status has changed, update it.
-pub async fn insert_or_update(days: i64) {
-    let db = get_database().await.unwrap();
+pub async fn insert_or_update(_days: i64) {
+    let _db = get_database().await.unwrap();
     let config = Config::new();
     config.load();
 

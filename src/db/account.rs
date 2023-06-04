@@ -1,7 +1,7 @@
 //! Functions for interacting with table `accounts`
 
 use super::get_database;
-use crate::config::Config;
+
 use crate::entities::{account, prelude::*};
 use crate::starling::account::Account as StarlingAccount;
 use crate::starling::client::{StarlingApiClient, StarlingClient};

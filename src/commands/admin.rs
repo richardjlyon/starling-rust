@@ -2,12 +2,12 @@
 //!
 
 use crate::config::Config;
-use crate::db::{self, get_database};
+use crate::db::{self};
 use anyhow::Result;
 use colored::Colorize;
 use sea_orm::Database;
 use std::io::Write;
-use std::{fs, io, process};
+use std::{io, process};
 
 /// Initialise the application.
 ///
@@ -25,41 +25,35 @@ pub async fn initialise() -> Result<()> {
     println!("Initialising the application");
 
     // delete the old config file, if it exists
-    // Config::delete();
+    Config::delete();
 
     // get and verify the database credentials from user
-    // match get_db_credentials().await {
-    //     Ok(_) => println!("{}", "OK: credentials".green()),
-    //     Err(e) => {
-    //         println!("{}: {}", "ERROR: Invalid database credentials".red(), e);
-    //         println!("Exited");
-    //         process::exit(1);
-    //     }
-    // }
-
-    // reset the database
-    // match db::reset().await {
-    //     Ok(_) => println!("{}", "OK: reset".green()),
-    //     Err(e) => {
-    //         println!("{}: {}", "ERROR: Failed to reset the database".red(), e);
-    //         println!("Exited");
-    //         process::exit(1);
-    //     }
-    // }
-
-    // get tokens and initialise account info
-    match get_accounts().await {
-        Ok(_) => println!("{}", "OK: accounts added".green()),
+    match get_db_credentials().await {
+        Ok(_) => println!("{}", "OK: credentials".green()),
         Err(e) => {
-            println!("{}: {}", "ERROR: Failed to get accounts".red(), e);
+            println!("{}: {}", "ERROR: Invalid database credentials".red(), e);
             println!("Exited");
             process::exit(1);
         }
     }
 
-    // Get transactions
+    // reset the database
+    match db::reset().await {
+        Ok(_) => println!("{}", "OK: reset".green()),
+        Err(e) => {
+            println!("{}: {}", "ERROR: Failed to reset the database".red(), e);
+            println!("Exited");
+            process::exit(1);
+        }
+    }
 
-    // Save config to yaml
+    Ok(())
+}
+
+/// Add accounts from token
+///
+pub async fn add_account(token: &String) -> Result<()> {
+    super::account::add(token).await?;
 
     Ok(())
 }
@@ -93,19 +87,6 @@ async fn get_db_credentials() -> Result<()> {
 
     Ok(())
 }
-
-// Get the Starling account token(s) from the user
-async fn get_accounts() -> Result<()> {
-    let filepath = get_string("Path to Starling API token");
-    let contents = fs::read_to_string(filepath).expect("opening file");
-    let token = contents.trim().to_string();
-    super::account::add(&token).await?;
-
-    Ok(())
-}
-
-// Get the Starling account tokens from the user
-// fn get_starling_tokens() -> Config {}
 
 fn get_string(prompt: &str) -> String {
     let mut input = String::new();

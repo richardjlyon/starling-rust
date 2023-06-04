@@ -4,8 +4,8 @@
 
 use anyhow::Result;
 use clap::{arg, Command};
-use money::commands;
-use std::process;
+use money::commands::{self};
+use std::{fs, process};
 
 /// Commands
 ///
@@ -21,17 +21,11 @@ fn cli() -> Command {
             Command::new("admin")
                 .about("Administer the application")
                 .arg_required_else_help(true)
-                .subcommand(Command::new("init").about("Initialise a fresh instance")),
-        )
-        .subcommand(
-            Command::new("account")
-                .about("Manage accounts")
-                .arg_required_else_help(true)
+                .subcommand(Command::new("init").about("Initialise a fresh instance"))
                 .subcommand(
                     Command::new("add")
                         .about("Add an account")
-                        .arg(arg!(-c --"config" "Initialise from config file"))
-                        .arg(arg!(-t --"token" <APITOKEN> "Initialise from api token")),
+                        .arg(arg!(-f --"filename" <APITOKEN> "filename with token")),
                 ),
         )
         .subcommand(Command::new("balances").about("Get balances"))
@@ -56,6 +50,17 @@ async fn main() -> Result<()> {
                         process::exit(1);
                     }
                 }
+
+                ("add", sub_matches) => {
+                    let filepath = sub_matches.get_one::<String>("filename").unwrap();
+                    let contents = fs::read_to_string(filepath).expect("opening file");
+                    let token = contents.trim().to_string();
+                    if let Err(e) = commands::admin::add_account(&token).await {
+                        println!("Application error: {}", e);
+                        process::exit(1);
+                    }
+                }
+
                 (name, _) => {
                     unreachable!("Unsupported command `{name}`")
                 }
@@ -65,26 +70,6 @@ async fn main() -> Result<()> {
         Some(("account", sub_matches)) => {
             let account_command = sub_matches.subcommand().unwrap();
             match account_command {
-                ("add", sub_matches) => {
-                    let from_config = sub_matches.get_one::<bool>("config");
-                    let token = sub_matches.get_one("token");
-                    match from_config {
-                        Some(_) => {
-                            println!("Getting from config");
-                            commands::account::add_from_config().await?;
-                        }
-                        None => match token {
-                            Some(token) => {
-                                println!("Adding from token");
-                                commands::account::add(token).await?;
-                            }
-                            None => {
-                                println!("No options selected");
-                                process::exit(1);
-                            }
-                        },
-                    }
-                }
                 (name, _) => {
                     unreachable!("Unsupported command `{name}`")
                 }
