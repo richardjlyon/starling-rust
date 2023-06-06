@@ -77,10 +77,10 @@ async fn main() -> Result<()> {
             let account_command = sub_matches.subcommand().unwrap();
             match account_command {
                 ("list", _) => {
-                    commands::account::list().await;
+                    commands::account::list().await?;
                 }
                 ("balance", _) => {
-                    println!("Accoount balances")
+                    commands::account::balance().await?;
                 }
 
                 (name, _) => {

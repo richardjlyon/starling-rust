@@ -1,9 +1,10 @@
 //! Structures and methods for processing `/api/v2/accounts/` endpoints
 
-use chrono::{DateTime, Utc};
-use serde::Deserialize;
-
 use super::client::StarlingApiClient;
+use anyhow::Result;
+use chrono::{DateTime, Utc};
+use format_num::NumberFormat;
+use serde::Deserialize;
 
 /// Represents a list of Starling accounts
 #[derive(Deserialize, Debug)]
@@ -26,30 +27,42 @@ pub struct Account {
 #[derive(Deserialize, Debug)]
 pub struct Balance {
     #[serde(rename = "clearedBalance")]
-    cleared: SignedCurrencyAndAmount,
+    pub cleared: SignedCurrencyAndAmount,
     #[serde(rename = "effectiveBalance")]
-    effective: SignedCurrencyAndAmount,
+    pub effective: SignedCurrencyAndAmount,
     #[serde(rename = "pendingTransactions")]
-    pending: SignedCurrencyAndAmount,
+    pub pending: SignedCurrencyAndAmount,
     #[serde(rename = "totalClearedBalance")]
-    total_cleared: SignedCurrencyAndAmount,
+    pub total_cleared: SignedCurrencyAndAmount,
     #[serde(rename = "acceptedOverdraft")]
-    overdraft: SignedCurrencyAndAmount,
+    pub overdraft: SignedCurrencyAndAmount,
     #[serde(rename = "totalEffectiveBalance")]
-    total_effective: SignedCurrencyAndAmount,
+    pub total_effective: SignedCurrencyAndAmount,
 }
 
 #[derive(Deserialize, Debug)]
-struct SignedCurrencyAndAmount {
+pub struct SignedCurrencyAndAmount {
     currency: String,
-    #[serde(rename = "minurUnits")]
+    #[serde(rename = "minorUnits")]
     minor_units: i64,
+}
+
+impl SignedCurrencyAndAmount {
+    pub fn as_float(&self) -> f32 {
+        self.minor_units as f32 / 100.0
+    }
+
+    pub fn as_string(&self) -> String {
+        let num = NumberFormat::new();
+        let amount = num.format(" >10,.2f", self.as_float());
+        format!("{} {}", self.currency, amount)
+    }
 }
 
 // Implement `/api/v2/accounts/{accountUid}/balance`
 //
 impl StarlingApiClient {
-    async fn balance(&self, account_uid: &String) -> Balance {
+    pub async fn balance(&self, account_uid: &String) -> Result<Balance> {
         let mut resp = surf::get(format!(
             "{}/accounts/{}/balance",
             &self.base_url, &account_uid
@@ -59,6 +72,6 @@ impl StarlingApiClient {
         .await
         .unwrap();
 
-        resp.body_json::<Balance>().await.unwrap()
+        Ok(resp.body_json::<Balance>().await.unwrap())
     }
 }
