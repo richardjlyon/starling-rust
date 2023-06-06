@@ -53,7 +53,7 @@ pub async fn initialise() -> Result<()> {
 /// Add accounts from token
 ///
 pub async fn add_account(token: &String) -> Result<()> {
-    super::account::add(token).await?;
+    db::account::add(token).await?;
 
     Ok(())
 }

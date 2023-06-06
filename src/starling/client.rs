@@ -23,8 +23,8 @@ pub trait StarlingClient {
 
 /// Represents a single Starling account
 pub struct StarlingApiClient {
-    key: String,
-    base_url: String,
+    pub key: String,
+    pub base_url: String,
 }
 
 impl StarlingApiClient {

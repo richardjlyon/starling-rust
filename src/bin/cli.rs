@@ -28,7 +28,13 @@ fn cli() -> Command {
                         .arg(arg!(-f --"filename" <APITOKEN> "filename with token")),
                 ),
         )
-        .subcommand(Command::new("balances").about("Get balances"))
+        .subcommand(
+            Command::new("account")
+                .about("Account commands")
+                .arg_required_else_help(true)
+                .subcommand(Command::new("list").about("List accounts"))
+                .subcommand(Command::new("balance").about("Account balances")),
+        )
         .subcommand(
             Command::new("transactions")
                 .about("get transactions")
@@ -70,13 +76,18 @@ async fn main() -> Result<()> {
         Some(("account", sub_matches)) => {
             let account_command = sub_matches.subcommand().unwrap();
             match account_command {
+                ("list", _) => {
+                    commands::account::list().await;
+                }
+                ("balance", _) => {
+                    println!("Accoount balances")
+                }
+
                 (name, _) => {
                     unreachable!("Unsupported command `{name}`")
                 }
             }
         }
-
-        Some(("balances", _sub_matches)) => println!("Processing balances"),
 
         Some(("transactions", sub_matches)) => {
             println!("Processing transactions");

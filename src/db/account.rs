@@ -23,22 +23,13 @@ pub async fn add(token: &String) -> Result<Vec<StarlingAccount>> {
     Ok(accounts)
 }
 
-// /// Insert accounts for the Starling account type with the access tokens in the config file
-// pub async fn add_from_config() -> Result<()> {
-//     let db = get_database().await.unwrap();
-//     let config = Config::new();
+/// List accounts
+pub async fn list() -> Result<Vec<account::Model>> {
+    let db = get_database().await.unwrap();
+    let accounts: Vec<account::Model> = Account::find().all(&db).await?;
 
-//     for item in config.token.unwrap().iter() {
-//         for token in item.values() {
-//             let client = StarlingApiClient::new(token);
-//             for account in client.accounts().await.iter() {
-//                 insert_account(account, token, &db).await?;
-//             }
-//         }
-//     }
-
-//     Ok(())
-// }
+    Ok(accounts)
+}
 
 /// If the account doesn't exist in the database, insert it
 pub async fn insert_account(
