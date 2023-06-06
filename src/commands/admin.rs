@@ -1,5 +1,7 @@
-//! Command Line Interface `Admin` commands
-//!
+/*!
+Command Line Interface `Admin` commands
+
+*/
 
 use crate::config::Config;
 use crate::db::{self};

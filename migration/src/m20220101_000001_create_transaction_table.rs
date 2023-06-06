@@ -22,6 +22,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Transaction::Uid).string().not_null())
+                    .col(ColumnDef::new(Transaction::AccountUid).string().not_null())
                     .col(
                         ColumnDef::new(Transaction::TransactionTime)
                             .timestamp()
@@ -60,6 +61,7 @@ pub enum Transaction {
     Table,
     Id,
     Uid,
+    AccountUid,
     TransactionTime,
     CounterpartyID,
     Amount,

@@ -8,6 +8,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub uid: String,
+    pub account_uid: String,
     pub transaction_time: DateTimeUtc,
     pub counterparty_id: i32,
     #[sea_orm(column_type = "Float")]

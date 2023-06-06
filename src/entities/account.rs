@@ -8,6 +8,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
+    #[sea_orm(column_type = "Binary(BlobSize::Blob(Some(16)))")]
     pub uid: String,
     pub created_at: DateTimeUtc,
     pub default_category: String,

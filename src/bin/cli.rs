@@ -38,7 +38,7 @@ fn cli() -> Command {
         .subcommand(
             Command::new("transactions")
                 .about("get transactions")
-                .arg(arg!(-d [DAYS] "The days to get").default_value("31")),
+                .arg(arg!(days: [DAYS] "The days to get").default_value("31")),
         )
 }
 
@@ -79,6 +79,7 @@ async fn main() -> Result<()> {
                 ("list", _) => {
                     commands::account::list().await?;
                 }
+
                 ("balance", _) => {
                     commands::account::balance().await?;
                 }
@@ -91,7 +92,14 @@ async fn main() -> Result<()> {
 
         Some(("transactions", sub_matches)) => {
             println!("Processing transactions");
-            let days = *sub_matches.get_one::<i64>("DAYS").expect("required");
+            let days = sub_matches
+                .get_one::<String>("days")
+                .map(|s| s.as_str())
+                .unwrap();
+            let days: i64 = days.parse().unwrap();
+
+            println!("Getting {} days", days);
+
             if let Err(e) = commands::transactions::update(days).await {
                 println!("Application error: {}", e);
                 process::exit(1);
